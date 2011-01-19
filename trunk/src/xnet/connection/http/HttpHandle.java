@@ -4,10 +4,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
+
 import xnet.connection.*;
 import xnet.io.IOBuffer;
+import xnet.test.Test;
 
 public class HttpHandle implements ISimpleHandle {
+	static Log logger = LogFactory.getLog(HttpHandle.class);
+	
 	public static int PACK_SIZE = 1024;
 
 	Map<String, String> reqHeader = null;
@@ -25,15 +32,26 @@ public class HttpHandle implements ISimpleHandle {
 	}
 
 	public void doRequest(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
-		// System.out.println(reqHeader);
-		Map<String, String> header = new HashMap<String, String>();
+		//logger.debug(reqHeader);
+		String res = "";
+		res += "HTTP/1.1 200 OK\r\n";
+		res += "Content-Length: 11\r\n";
+		res += "Version: HTTP/1.1\r\n";
+		res += "Content-Type: text/html\r\n\r\n";
+		res += "hello world";
+		resBuf.putString(res, "ISO-8859-1");
+		reqHeader.remove("Cookie");
+		logger.info(reqHeader + "\t" + res.length() + "\t" + "200");
+		
+		/**
 		header.put("Content-Type", "text/html");
-		header.put("Version", "HTTP/1.1");
+		header.put("Version", "HTTP/1.0");
 		header.put("Code", "200");
 		header.put("Status", "OK");
 		header.put("Body", "hello world");
-		System.out.println(header);
+		logger.debug(header);
 		buildHeader(resBuf, header);
+		*/
 	}
 
 	public int remain(IOBuffer buf) {

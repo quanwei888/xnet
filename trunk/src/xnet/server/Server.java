@@ -7,12 +7,19 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
+
 import xnet.connection.*;
 import xnet.event.*;
 import xnet.io.IOBuffer;
+import xnet.test.Test;
 
 
 public class Server {
+	static Log logger = LogFactory.getLog(Server.class);
+	
 	protected ServerSocketChannel serverSocketChannel = null;
 	protected EventManager ev = null;
 	/**
@@ -146,13 +153,13 @@ public class Server {
 			Server server = (Server)obj;
 			try {
 				socketChannel = serverSocketChannel.accept();
-				System.out.println("\n---------------------\nserver accetp," + socketChannel);
+				logger.debug("\n---------------------\nserver accetp," + socketChannel);
 				IConnection conn = ConnectionPool.alloc();
 				if (conn == null) {
-					System.out.println("too many connection");
+					logger.debug("too many connection");
 					return;
 				}				 
-				//System.out.println(socketChannel + conn.toString());
+				//logger.debug(socketChannel + conn.toString());
 				socketChannel.configureBlocking(false);
 				
 				conn.setSocketChannel(socketChannel);

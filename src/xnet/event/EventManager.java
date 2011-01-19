@@ -8,6 +8,13 @@ import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
+
+import xnet.connection.http.HttpHandle;
+import xnet.test.Test;
+
 /**
  * 事件管理器，用于异步IO操作
  * 
@@ -15,6 +22,8 @@ import java.util.Set;
  * 
  */
 public class EventManager {
+	static Log logger = LogFactory.getLog(EventManager.class);
+	
 	protected Selector selector;
 	protected long timeOut;
 
@@ -74,7 +83,7 @@ public class EventManager {
 	 */
 	public void delEvent(SelectableChannel channel) {
 		channel.keyFor(selector).cancel();
-		System.out.println("cancel key");
+		logger.debug("cancel key");
 	}
 
 	/**
@@ -86,7 +95,7 @@ public class EventManager {
 		while (true) {
 			long stime = System.currentTimeMillis();
 			int ret = selector.select();
-			System.out.println("select return:" + ret);
+			logger.debug("select return:" + ret);
 			if (selector.keys().size() == 0) {
 				// 没有事件被监听则结束循环
 				break;
@@ -128,15 +137,15 @@ public class EventManager {
 				int evSet = 0;
 				if (key.isReadable()) {
 					evSet = evSet | EventType.EV_READ;
-					System.out.println("event:EV_READ");
+					logger.debug("event:EV_READ");
 				}
 				if (key.isWritable()) {
 					evSet = evSet | EventType.EV_WRITE;
-					System.out.println("event:EV_WRITE");
+					logger.debug("event:EV_WRITE");
 				}
 				if (key.isAcceptable()) {
 					evSet = evSet | EventType.EV_ACCEPT;
-					System.out.println("event:EV_ACCEPT");
+					logger.debug("event:EV_ACCEPT");
 				}
 
 				// 事件处理器

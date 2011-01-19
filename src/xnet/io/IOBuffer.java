@@ -21,7 +21,6 @@ public class IOBuffer {
 	public IOBuffer limit(int limit) {
 		if (limit > buf.capacity()) {
 			ByteBuffer newBuf = ByteBuffer.allocate(limit);
-			System.out.println("@new ByteBuffer");
 			System.arraycopy(buf.array(), 0, newBuf.array(), 0, buf.capacity());
 			newBuf.position(buf.position());
 			buf = newBuf;

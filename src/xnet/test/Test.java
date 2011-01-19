@@ -1,18 +1,22 @@
 package xnet.test;
 
 import java.nio.ByteBuffer;
-import org.apache.mina.core.IoUtil;
+import org.apache.log4j.Logger;
+import org.apache.log4j.BasicConfigurator;
+
 public class Test {
+	static Logger logger = Logger.getLogger(Test.class);
 
 	/**
 	 * @param args
-	 * @throws InterruptedException 
+	 * @throws InterruptedException
 	 */
 	public static void main(String[] args) throws InterruptedException {
+		// Set up a simple configuration that logs on the console.
+		BasicConfigurator.configure();
 
-		ByteBuffer.allocate(1);
-		while (true) { 
-		}
+		logger.info("Entering application."); 
+		logger.info("Exiting application.");
 
 	}
 

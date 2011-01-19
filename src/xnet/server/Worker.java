@@ -5,12 +5,19 @@ import java.nio.channels.Pipe.SinkChannel;
 import java.nio.channels.Pipe.SourceChannel;
 import java.nio.channels.SelectableChannel;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
+
 import xnet.connection.*;
 import xnet.event.*;
 import xnet.io.IOBuffer;
+import xnet.test.Test;
 
 
 public class Worker implements Runnable {
+	static Log logger = LogFactory.getLog(Worker.class);
+	
 	/**
 	 * 事件管理器
 	 */
@@ -63,7 +70,7 @@ public class Worker implements Runnable {
 				// 从管道读1byte
 				pipeBuf.clear();
 				sourceChannel.read(pipeBuf.getBuf());
-				System.out.println("worker read from pipe");
+				logger.debug("worker read from pipe");
 
 				if (pipeBuf.remaining() != 0) {
 					return;

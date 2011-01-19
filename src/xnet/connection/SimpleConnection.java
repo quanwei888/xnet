@@ -4,8 +4,13 @@ import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
+
 import xnet.event.*;
 import xnet.io.IOBuffer;
+import xnet.test.Test;
 
 /**
  * 简单的connection 实现了request->response的过程
@@ -14,6 +19,8 @@ import xnet.io.IOBuffer;
  * 
  */
 public class SimpleConnection extends Connection implements IEventHandle {
+	static Log logger = LogFactory.getLog(SimpleConnection.class);
+	
 	/**
 	 * 当前状态
 	 */
@@ -45,7 +52,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	IoState read() {
 		try {
 			int len = socketChannel.read(readBuf.getBuf());
-			System.out.println("remdin:" + readBuf.remaining() + ",read len:"
+			logger.debug("remdin:" + readBuf.remaining() + ",read len:"
 					+ len);
 			if (len <= 0) {
 				return IoState.ERROR;
@@ -70,7 +77,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	IoState write() {
 		try {
 			int len = socketChannel.write(writeBuf.getBuf());
-			System.out.println("remdin:" + writeBuf.remaining() + ",write len:"
+			logger.debug("remdin:" + writeBuf.remaining() + ",write len:"
 					+ len);
 			if (len <= 0) {
 				return IoState.ERROR;
@@ -118,15 +125,15 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	public void handle(SelectableChannel select, int type, Object obj) {
 		boolean stop = false;
 		IoState ioState = IoState.ERROR;
-		System.out.println("connection event start:" + type);
+		logger.debug("connection event start:" + type);
 		do {
 			stop = false;
 			ioState = IoState.ERROR;
-			System.out.println("state:" + state.getValue());
+			logger.debug("state:" + state.getValue());
 			switch (state.getValue()) {
 			case SimpleState.READ_REQ:
 				ioState = read();
-				System.out.println("iostate:" + ioState);
+				logger.debug("iostate:" + ioState);
 				if (ioState == IoState.ERROR) {
 					state.setValue(SimpleState.CLOSE);
 					break;
@@ -159,7 +166,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 				break;
 			case SimpleState.WRITE_RES:
 				ioState = write();
-				System.out.println("iostate:" + ioState);
+				logger.debug("iostate:" + ioState);
 				if (ioState == IoState.ERROR) {
 					state.setValue(SimpleState.CLOSE);
 				} else if (ioState == IoState.GOON) {
@@ -175,7 +182,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 			case SimpleState.CLOSE:
 			default:
 				// 关闭连接
-				System.out.println("close connection");
+				logger.debug("close connection");
 				try {
 					// 删除原来注册的事件
 					worker.getEv().delEvent(socketChannel);

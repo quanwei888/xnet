@@ -13,7 +13,18 @@ public class HttpHandle implements ISimpleHandle {
 	Map<String, String> reqHeader = null;
 	int headerEndPos = 0;
 
-	public void handle(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
+	public void beginRequest(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
+		reqHeader = null;
+		// 初始化readbuf
+		reqBuf.clear();
+		reqBuf.limit(PACK_SIZE);
+
+		// 初始化writebuf
+		resBuf.clear();
+		resBuf.limit(0);
+	}
+
+	public void doRequest(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
 		// System.out.println(reqHeader);
 		Map<String, String> header = new HashMap<String, String>();
 		header.put("Content-Type", "text/html");
@@ -22,14 +33,11 @@ public class HttpHandle implements ISimpleHandle {
 		header.put("Status", "OK");
 		header.put("Body", "hello world");
 		System.out.println(header);
-		buildHeader(resBuf, header);		 
+		buildHeader(resBuf, header);
 	}
 
 	public int remain(IOBuffer buf) {
-		if (buf.position() == 0) {
-			return PACK_SIZE;
-		}
-		if (reqHeader == null) { 
+		if (reqHeader == null) {
 			String sHeader = buf.toString("ISO-8859-1");
 			int pos = sHeader.indexOf("\r\n\r\n");
 			if (pos >= 0) {
@@ -70,12 +78,15 @@ public class HttpHandle implements ISimpleHandle {
 		return 0;
 	}
 
-	protected void buildHeader(IOBuffer resBuf, Map<String, String> header) throws Exception {
-		if (!header.containsKey("Version") || !header.containsKey("Code") || !header.containsKey("Status")) {
+	protected void buildHeader(IOBuffer resBuf, Map<String, String> header)
+			throws Exception {
+		if (!header.containsKey("Version") || !header.containsKey("Code")
+				|| !header.containsKey("Status")) {
 			// 非法header
 			throw new Exception();
 		}
-		String hLine = header.get("Version") + " " + header.get("Code") + " " + header.get("Status");
+		String hLine = header.get("Version") + " " + header.get("Code") + " "
+				+ header.get("Status");
 		resBuf.putString(hLine, "ISO-8859-1");
 		resBuf.putString("\r\n", "ISO-8859-1");
 		header.remove("Method");
@@ -86,12 +97,15 @@ public class HttpHandle implements ISimpleHandle {
 		if (header.containsKey("Body")) {
 			body = header.get("Body");
 			header.remove("Body");
-			header.put("Content-Length", String.valueOf(body.getBytes("utf-8").length));
+			header.put("Content-Length", String
+					.valueOf(body.getBytes("utf-8").length));
 		}
 		Iterator<Map.Entry<String, String>> it = header.entrySet().iterator();
 		while (it.hasNext()) {
-			Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
-			resBuf.putString(entry.getKey() + ": " + entry.getValue(), "ISO-8859-1");
+			Map.Entry<String, String> entry = (Map.Entry<String, String>) it
+					.next();
+			resBuf.putString(entry.getKey() + ": " + entry.getValue(),
+					"ISO-8859-1");
 			resBuf.putString("\r\n", "ISO-8859-1");
 		}
 		resBuf.putString("\r\n", "ISO-8859-1");

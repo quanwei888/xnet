@@ -45,7 +45,8 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	IoState read() {
 		try {
 			int len = socketChannel.read(readBuf.getBuf());
-			System.out.println("remdin:" + readBuf.remaining() + ",read len:" + len);
+			System.out.println("remdin:" + readBuf.remaining() + ",read len:"
+					+ len);
 			if (len <= 0) {
 				return IoState.ERROR;
 			}
@@ -68,8 +69,9 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	 */
 	IoState write() {
 		try {
-			int len = socketChannel.write(writeBuf.getBuf());	
-			System.out.println("remdin:" + writeBuf.remaining() + ",write len:" + len);
+			int len = socketChannel.write(writeBuf.getBuf());
+			System.out.println("remdin:" + writeBuf.remaining() + ",write len:"
+					+ len);
 			if (len <= 0) {
 				return IoState.ERROR;
 			}
@@ -85,25 +87,21 @@ public class SimpleConnection extends Connection implements IEventHandle {
 
 	protected void initState() {
 		state.setValue(SimpleState.READ_REQ);
-		// 初始化readbuf
-		readBuf.clear();
-		readBuf.limit(handle.remain(readBuf));
-
-		// 初始化writebuf
-		writeBuf.clear();
-		writeBuf.limit(0);
-
-		// 读事件
 		try {
+			handle.beginRequest(readBuf, writeBuf);
 			worker.getEv().addEvent(socketChannel,
 					EventType.EV_READ | EventType.EV_PERSIST, this, null, 0);
-		} catch (ClosedChannelException e) {
+		} catch (Exception e) {
 			state.setValue(SimpleState.CLOSE);
 		}
 	}
 
 	public void connectionCreate() {
-		initState();
+		try {
+			initState();
+		} catch (Exception e) {
+			state.setValue(SimpleState.CLOSE);
+		}
 	}
 
 	public void connectionClose() {
@@ -146,7 +144,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 					state.setValue(SimpleState.WRITE_RES);
 					try {
 						// 处理请求
-						handle.handle(readBuf, writeBuf);
+						handle.doRequest(readBuf, writeBuf);
 						writeBuf.position(0);
 						// 注册新事件
 						worker.getEv().addEvent(socketChannel,

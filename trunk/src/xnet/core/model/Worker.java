@@ -6,12 +6,10 @@ import java.nio.channels.Pipe.SourceChannel;
 import java.nio.channels.SelectableChannel;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.LogFactory; 
 
 import xnet.core.*;
-import xnet.core.event.*;
-import xnet.test.Test;
+import xnet.core.event.*; 
 
 
 public class Worker implements Runnable {

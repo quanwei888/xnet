@@ -1,22 +1,21 @@
 package xnet.core.model;
 
 import java.io.IOException;
-import java.net.InetSocketAddress; 
+import java.net.InetSocketAddress;
 import java.nio.channels.Pipe;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory; 
+import org.apache.commons.logging.LogFactory;
 
 import xnet.core.*;
-import xnet.core.event.*; 
-
+import xnet.core.event.*;
 
 public class Server {
 	static Log logger = LogFactory.getLog(Server.class);
-	
+
 	protected ServerSocketChannel serverSocketChannel = null;
 	protected EventManager ev = null;
 	/**
@@ -27,6 +26,23 @@ public class Server {
 	 * 读超时
 	 */
 	protected long readTimeout = 0;
+
+	public int getPort() {
+		return port;
+	}
+
+	public long getReadTimeout() {
+		return readTimeout;
+	}
+
+	public long getWriteTimeout() {
+		return writeTimeout;
+	}
+
+	public int getThreadNum() {
+		return threadNum;
+	}
+
 	/**
 	 * 写超时
 	 */
@@ -43,9 +59,11 @@ public class Server {
 	 * 上一次工作线程ID
 	 */
 	protected int lastThread = -1;
-
+	/**
+	 * 长连接
+	 */
 	protected boolean keepalive = false;
-	
+
 	protected IOBuffer pipeBuf = new IOBuffer(1);
 
 	public boolean isKeepalive() {
@@ -122,7 +140,7 @@ public class Server {
 	 * 
 	 * @throws IOException
 	 */
-	void initThread() throws IOException { 
+	void initThread() throws IOException {
 		workers = new Worker[threadNum];
 
 		for (int i = 0; i < workers.length; i++) {
@@ -144,10 +162,10 @@ public class Server {
 	 * 
 	 */
 	class ServerHandle implements IEventHandle {
-		public void onIOReady(SelectableChannel select, int type, Object obj) {			 
+		public void onIOReady(SelectableChannel select, int type, Object obj) {
 			ServerSocketChannel serverSocketChannel = (ServerSocketChannel) select;
 			SocketChannel socketChannel = null;
-			Server server = (Server)obj;
+			Server server = (Server) obj;
 			try {
 				socketChannel = serverSocketChannel.accept();
 				logger.debug("\n---------------------\nserver accetp," + socketChannel);
@@ -155,10 +173,10 @@ public class Server {
 				if (conn == null) {
 					logger.debug("too many connection");
 					return;
-				}				 
-				//logger.debug(socketChannel + conn.toString());
+				}
+				// logger.debug(socketChannel + conn.toString());
 				socketChannel.configureBlocking(false);
-				
+
 				conn.setSocketChannel(socketChannel);
 				ConnectionPool.pushQueue(conn);
 

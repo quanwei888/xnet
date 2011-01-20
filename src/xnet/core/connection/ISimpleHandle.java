@@ -1,6 +1,6 @@
 package xnet.core.connection;
 
-import xnet.io.IOBuffer;
+import xnet.core.IOBuffer;
 
 
 public interface ISimpleHandle {

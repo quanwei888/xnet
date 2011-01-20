@@ -1,4 +1,4 @@
-package xnet.core;
+package xnet.core.connection;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -8,7 +8,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 
-import xnet.event.*;
+import xnet.core.Connection;
+import xnet.core.ConnectionPool;
+import xnet.core.ConnectionState;
+import xnet.core.event.*;
 import xnet.io.IOBuffer;
 import xnet.test.Test;
 

@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 
 import xnet.core.Connection;
 import xnet.core.ConnectionPool;
-import xnet.core.ConnectionState;
 import xnet.core.IOBuffer;
 import xnet.core.event.*;
 import xnet.test.Test;

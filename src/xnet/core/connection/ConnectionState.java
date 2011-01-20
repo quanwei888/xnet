@@ -1,6 +1,5 @@
-package xnet.core;
+package xnet.core.connection;
 
-import xnet.core.connection.IConnectionState;
 
 
 public class ConnectionState implements IConnectionState {

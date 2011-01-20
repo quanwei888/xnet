@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 
 public class IOBuffer {
 	protected ByteBuffer buf;
+	protected String charset = "UTF-8";
 
 	public ByteBuffer getBuf() {
 		return buf;
@@ -16,6 +17,10 @@ public class IOBuffer {
 
 	public IOBuffer() {
 		buf = ByteBuffer.allocate(0);
+	}
+
+	public void setCharset(String charset) {
+		this.charset = charset;
 	}
 
 	public IOBuffer limit(int limit) {
@@ -65,25 +70,19 @@ public class IOBuffer {
 		buf.clear();
 	}
 
-	public String toString(String charset) {
+	public String getString() throws UnsupportedEncodingException {
 		int pos = buf.position();
 		int len = pos;
 		byte[] bytes = new byte[len];
 		buf.position(0);
 		buf.get(bytes, 0, len);
 		buf.position(pos);
-		try {
-			return new String(bytes, charset);
-		} catch (UnsupportedEncodingException e) {
-			return null;
-		}
+		return new String(bytes, charset);
 	}
 
-	public int putString(String str, String charset)
-			throws UnsupportedEncodingException {
+	public void putString(String str) throws UnsupportedEncodingException {
 		byte[] bytes = str.getBytes(charset);
 		limit(buf.position() + bytes.length);
 		buf.put(bytes);
-		return bytes.length;
 	}
 }

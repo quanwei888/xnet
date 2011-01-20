@@ -1,60 +1,55 @@
 package xnet.connection.http;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory; 
+import org.apache.commons.logging.LogFactory;
 
 import xnet.core.*;
-import xnet.core.connection.ISimpleHandle; 
+import xnet.core.connection.ISimpleHandle;
 
 public class HttpHandle implements ISimpleHandle {
 	static Log logger = LogFactory.getLog(HttpHandle.class);
-	
+
 	public static int PACK_SIZE = 1024;
 
 	Map<String, String> reqHeader = null;
 	int headerEndPos = 0;
 
-	public void beginRequest(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
-		reqHeader = null;
-		// 初始化readbuf
-		reqBuf.clear();
-		reqBuf.limit(PACK_SIZE);
-
-		// 初始化writebuf
-		resBuf.clear();
-		resBuf.limit(0);
+	public void sessionCreate(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
 	}
 
-	public void doRequest(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
-		//logger.debug(reqHeader);
+	public void sessionHandle(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
+		// logger.debug(reqHeader);
 		String res = "";
 		res += "HTTP/1.1 200 OK\r\n";
 		res += "Content-Length: 11\r\n";
 		res += "Version: HTTP/1.1\r\n";
 		res += "Content-Type: text/html\r\n\r\n";
 		res += "hello world";
-		resBuf.putString(res, "ISO-8859-1");
+		try {
+			resBuf.putString(res);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		reqHeader.remove("Cookie");
 		logger.info(reqHeader + "\t" + res.length() + "\t" + "200");
-		
+
 		/**
-		header.put("Content-Type", "text/html");
-		header.put("Version", "HTTP/1.0");
-		header.put("Code", "200");
-		header.put("Status", "OK");
-		header.put("Body", "hello world");
-		logger.debug(header);
-		buildHeader(resBuf, header);
-		*/
+		 * header.put("Content-Type", "text/html"); header.put("Version",
+		 * "HTTP/1.0"); header.put("Code", "200"); header.put("Status", "OK");
+		 * header.put("Body", "hello world"); logger.debug(header);
+		 * buildHeader(resBuf, header);
+		 */
 	}
 
 	public int remain(IOBuffer buf) {
 		if (reqHeader == null) {
-			String sHeader = buf.toString("ISO-8859-1");
+			String sHeader = buf.toString();
 			int pos = sHeader.indexOf("\r\n\r\n");
 			if (pos >= 0) {
 				sHeader = sHeader.substring(0, pos);
@@ -94,17 +89,14 @@ public class HttpHandle implements ISimpleHandle {
 		return 0;
 	}
 
-	protected void buildHeader(IOBuffer resBuf, Map<String, String> header)
-			throws Exception {
-		if (!header.containsKey("Version") || !header.containsKey("Code")
-				|| !header.containsKey("Status")) {
+	protected void buildHeader(IOBuffer resBuf, Map<String, String> header) throws Exception {
+		if (!header.containsKey("Version") || !header.containsKey("Code") || !header.containsKey("Status")) {
 			// 非法header
 			throw new Exception();
 		}
-		String hLine = header.get("Version") + " " + header.get("Code") + " "
-				+ header.get("Status");
-		resBuf.putString(hLine, "ISO-8859-1");
-		resBuf.putString("\r\n", "ISO-8859-1");
+		String hLine = header.get("Version") + " " + header.get("Code") + " " + header.get("Status");
+		resBuf.putString(hLine);
+		resBuf.putString("\r\n");
 		header.remove("Method");
 		header.remove("Code");
 		header.remove("Status");
@@ -113,19 +105,16 @@ public class HttpHandle implements ISimpleHandle {
 		if (header.containsKey("Body")) {
 			body = header.get("Body");
 			header.remove("Body");
-			header.put("Content-Length", String
-					.valueOf(body.getBytes("utf-8").length));
+			header.put("Content-Length", String.valueOf(body.getBytes("utf-8").length));
 		}
 		Iterator<Map.Entry<String, String>> it = header.entrySet().iterator();
 		while (it.hasNext()) {
-			Map.Entry<String, String> entry = (Map.Entry<String, String>) it
-					.next();
-			resBuf.putString(entry.getKey() + ": " + entry.getValue(),
-					"ISO-8859-1");
-			resBuf.putString("\r\n", "ISO-8859-1");
+			Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
+			resBuf.putString(entry.getKey() + ": " + entry.getValue());
+			resBuf.putString("\r\n");
 		}
-		resBuf.putString("\r\n", "ISO-8859-1");
-		resBuf.putString(body, "ISO-8859-1");
+		resBuf.putString("\r\n");
+		resBuf.putString(body);
 	}
 
 	protected Map<String, String> parseHeader(String sHeader) {
@@ -156,6 +145,25 @@ public class HttpHandle implements ISimpleHandle {
 			header.put(row[0].trim(), row[1].trim());
 		}
 		return header;
+	}
+
+	public void sessionClose(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
+
+	}
+
+	public void sessionDestrory(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
+
+	}
+
+	public void sessionOpen(IOBuffer reqBuf, IOBuffer resBuf) throws Exception {
+		reqHeader = null;
+		// 初始化readbuf
+		reqBuf.clear();
+		reqBuf.limit(PACK_SIZE);
+
+		// 初始化writebuf
+		resBuf.clear();
+		resBuf.limit(0);
 	}
 
 }

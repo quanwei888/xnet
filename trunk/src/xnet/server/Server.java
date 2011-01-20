@@ -11,7 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 
-import xnet.connection.*;
+import xnet.core.*;
 import xnet.event.*;
 import xnet.io.IOBuffer;
 import xnet.test.Test;
@@ -147,7 +147,7 @@ public class Server {
 	 * 
 	 */
 	class ServerHandle implements IEventHandle {
-		public void handle(SelectableChannel select, int type, Object obj) {			 
+		public void onIOReady(SelectableChannel select, int type, Object obj) {			 
 			ServerSocketChannel serverSocketChannel = (ServerSocketChannel) select;
 			SocketChannel socketChannel = null;
 			Server server = (Server)obj;

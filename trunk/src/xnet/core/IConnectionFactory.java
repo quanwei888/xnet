@@ -1,4 +1,4 @@
-package xnet.connection;
+package xnet.core;
  
 public interface IConnectionFactory {
 	IConnection createConnection();

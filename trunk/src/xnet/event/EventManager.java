@@ -9,11 +9,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Logger;
-
-import xnet.connection.http.HttpHandle;
-import xnet.test.Test;
+import org.apache.commons.logging.LogFactory; 
 
 /**
  * 事件管理器，用于异步IO操作
@@ -23,9 +19,9 @@ import xnet.test.Test;
  */
 public class EventManager {
 	static Log logger = LogFactory.getLog(EventManager.class);
-	
+
 	protected Selector selector;
-	protected long timeOut;
+	protected long timeout;
 
 	/**
 	 * 构造函数
@@ -34,7 +30,7 @@ public class EventManager {
 	 */
 	public EventManager() throws IOException {
 		selector = Selector.open();
-		timeOut = 0;
+		timeout = 0;
 	}
 
 	/**
@@ -48,16 +44,11 @@ public class EventManager {
 	 *            监听对象，用于事件触发时回调
 	 * @param obj
 	 *            附件
-	 * @param timeOut
+	 * @param timeout
 	 *            超时时间
 	 * @throws ClosedChannelException
 	 */
-	public void addEvent(SelectableChannel channel, int type,
-			IEventHandle evHandle, Object obj, long timeOut)
-			throws ClosedChannelException {
-		EventAttr attr = new EventManager.EventAttr(type, evHandle, obj,
-				timeOut);
-
+	public boolean addEvent(SelectableChannel channel, int type, IEventHandle evHandle, Object obj, long timeout) {
 		int evSet = 0;
 		if ((type & EventType.EV_READ) > 0) {
 			evSet = evSet | SelectionKey.OP_READ;
@@ -68,12 +59,19 @@ public class EventManager {
 		if ((type & EventType.EV_ACCEPT) > 0) {
 			evSet = evSet | SelectionKey.OP_ACCEPT;
 		}
-		if (timeOut > 0 && timeOut < this.timeOut) {
+		if (timeout > 0 && timeout < this.timeout) {
 			// 取最小的超时设置
-			this.timeOut = timeOut;
+			this.timeout = timeout;
 		}
 
-		channel.register(selector, evSet, attr);
+		try {
+			EventAttr attr = new EventManager.EventAttr(type, evHandle, obj, timeout);
+			channel.register(selector, evSet, attr);
+		} catch (ClosedChannelException e) {
+			logger.warn(e.getMessage());
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -82,8 +80,8 @@ public class EventManager {
 	 * @param channel
 	 */
 	public void delEvent(SelectableChannel channel) {
-		channel.keyFor(selector).cancel();
 		logger.debug("cancel key");
+		channel.keyFor(selector).cancel();
 	}
 
 	/**
@@ -91,10 +89,17 @@ public class EventManager {
 	 * 
 	 * @throws IOException
 	 */
-	public void loop() throws IOException {
+	public void loop() {
 		while (true) {
 			long stime = System.currentTimeMillis();
-			int ret = selector.select();
+			int ret;
+			try {
+				ret = selector.select();
+			} catch (IOException e) {
+				logger.warn(e.getMessage());
+				continue;
+			}
+
 			logger.debug("select return:" + ret);
 			if (selector.keys().size() == 0) {
 				// 没有事件被监听则结束循环
@@ -109,14 +114,13 @@ public class EventManager {
 				while (iter.hasNext()) {
 					SelectionKey key = iter.next();
 					EventAttr attr = (EventAttr) key.attachment();
-					if (attr.timeOut == 0) {
+					if (attr.timeout == 0) {
 						continue;
 					}
 
-					if (timeCost > attr.timeOut) {
+					if (timeCost > attr.timeout) {
 						// 事件处理器
-						attr.evHandle.handle(key.channel(),
-								EventType.EV_TIMEOUT, attr.obj);
+						attr.evHandle.onIOReady(key.channel(), EventType.EV_TIMEOUT, attr.obj);
 						if ((attr.type & EventType.EV_PERSIST) == 0) {
 							// 如果不是EV_PERSIST类型的事件，则删除关联的key
 							key.cancel();
@@ -149,13 +153,11 @@ public class EventManager {
 				}
 
 				// 事件处理器
-				attr.evHandle.handle(key.channel(), evSet, attr.obj);
-
+				attr.evHandle.onIOReady(key.channel(), evSet, attr.obj);
 				if ((attr.type & EventType.EV_PERSIST) == 0) {
-					// 如果不是EV_PERSIST类型的事件，则删除关联的key
 					key.cancel();
 				}
-			} 
+			}
 		}
 	}
 
@@ -168,13 +170,13 @@ public class EventManager {
 	class EventAttr {
 		int type;
 		IEventHandle evHandle;
-		long timeOut;
+		long timeout;
 		public Object obj;
 
-		public EventAttr(int type, IEventHandle handle, Object obj, long timeOut) {
+		public EventAttr(int type, IEventHandle handle, Object obj, long timeout) {
 			this.type = type;
 			this.obj = obj;
-			this.timeOut = timeOut;
+			this.timeout = timeout;
 			this.evHandle = handle;
 		}
 	}

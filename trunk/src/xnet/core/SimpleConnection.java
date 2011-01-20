@@ -1,4 +1,4 @@
-package xnet.connection;
+package xnet.core;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -122,7 +122,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	/**
 	 * 异步的io事件处理
 	 */
-	public void handle(SelectableChannel select, int type, Object obj) {
+	public void onIOReady(SelectableChannel select, int type, Object obj) {
 		boolean stop = false;
 		IoState ioState = IoState.ERROR;
 		logger.debug("connection event start:" + type);

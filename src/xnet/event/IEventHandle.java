@@ -9,10 +9,10 @@ import java.nio.channels.*;
  */
 public interface IEventHandle {
 	/**
-	 * 回调方法
+	 * 事件出发回调函数对象
 	 * @param select	
-	 * @param type	触发的事件类型
-	 * @param obj	注册时的附件
+	 * @param type	事件类型
+	 * @param obj	附件
 	 */
-	void handle(SelectableChannel select,int type,Object obj);
+	void onIOReady(SelectableChannel select,int type,Object obj);
 }

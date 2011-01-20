@@ -8,7 +8,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 
-import xnet.connection.*;
+import xnet.core.*;
 import xnet.io.IOBuffer;
 import xnet.test.Test;
 

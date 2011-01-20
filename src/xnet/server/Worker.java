@@ -9,7 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 
-import xnet.connection.*;
+import xnet.core.*;
 import xnet.event.*;
 import xnet.io.IOBuffer;
 import xnet.test.Test;
@@ -64,7 +64,7 @@ public class Worker implements Runnable {
 	}
 
 	class PipeHandle implements IEventHandle {
-		public void handle(SelectableChannel channel, int type, Object obj) {
+		public void onIOReady(SelectableChannel channel, int type, Object obj) {
 			SourceChannel sourceChannel = (SourceChannel) channel;
 			try {
 				// ´Ó¹ÜµÀ¶Á1byte

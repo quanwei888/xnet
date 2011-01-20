@@ -1,6 +1,6 @@
 package xnet.connection.http;
 
-import xnet.connection.*;
+import xnet.core.*;
 
 public class HttpFactory implements IConnectionFactory {
 	public IConnection createConnection() {

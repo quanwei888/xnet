@@ -1,4 +1,4 @@
-package xnet.connection;
+package xnet.core;
 
 import xnet.io.IOBuffer;
 

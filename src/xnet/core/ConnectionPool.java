@@ -1,4 +1,4 @@
-package xnet.connection;
+package xnet.core;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

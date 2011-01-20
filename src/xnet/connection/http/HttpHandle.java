@@ -5,12 +5,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.LogFactory; 
 
 import xnet.core.*;
-import xnet.core.connection.ISimpleHandle;
-import xnet.test.Test;
+import xnet.core.connection.ISimpleHandle; 
 
 public class HttpHandle implements ISimpleHandle {
 	static Log logger = LogFactory.getLog(HttpHandle.class);

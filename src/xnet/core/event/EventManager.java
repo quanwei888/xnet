@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory; 
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 事件管理器，用于异步IO操作
@@ -81,7 +81,10 @@ public class EventManager {
 	 */
 	public void delEvent(SelectableChannel channel) {
 		logger.debug("cancel key");
-		channel.keyFor(selector).cancel();
+		SelectionKey key = channel.keyFor(selector);
+		if (key != null) {
+			key.cancel();
+		}
 	}
 
 	/**

@@ -1,15 +1,15 @@
 package xnet.core.connection;
 
-import java.io.IOException; 
+import java.io.IOException;
 import java.nio.channels.SelectableChannel;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory; 
+import org.apache.commons.logging.LogFactory;
 
 import xnet.core.Connection;
 import xnet.core.ConnectionPool;
 import xnet.core.IOBuffer;
-import xnet.core.event.*; 
+import xnet.core.event.*;
 
 /**
  * 简单的connection 实现了request->response的过程
@@ -19,7 +19,7 @@ import xnet.core.event.*;
  */
 public class SimpleConnection extends Connection implements IEventHandle {
 	static Log logger = LogFactory.getLog(SimpleConnection.class);
-	
+
 	/**
 	 * 当前状态
 	 */
@@ -51,8 +51,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	IoState read() {
 		try {
 			int len = socketChannel.read(readBuf.getBuf());
-			logger.debug("remdin:" + readBuf.remaining() + ",read len:"
-					+ len);
+			logger.debug("remdin:" + readBuf.remaining() + ",read len:" + len);
 			if (len <= 0) {
 				return IoState.ERROR;
 			}
@@ -76,8 +75,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	IoState write() {
 		try {
 			int len = socketChannel.write(writeBuf.getBuf());
-			logger.debug("remdin:" + writeBuf.remaining() + ",write len:"
-					+ len);
+			logger.debug("remdin:" + writeBuf.remaining() + ",write len:" + len);
 			if (len <= 0) {
 				return IoState.ERROR;
 			}
@@ -91,31 +89,24 @@ public class SimpleConnection extends Connection implements IEventHandle {
 		}
 	}
 
-	protected void initState() {
+	protected void initState() throws Exception {
 		state.setValue(SimpleState.READ_REQ);
-		try {
-			handle.beginRequest(readBuf, writeBuf);
-			worker.getEv().addEvent(socketChannel,
-					EventType.EV_READ | EventType.EV_PERSIST, this, null, 0);
-		} catch (Exception e) {
+		handle.sessionOpen(readBuf, writeBuf);
+		long timeout = worker.getServer().getReadTimeout();
+		if (!worker.getEv().addEvent(socketChannel, EventType.EV_READ | EventType.EV_PERSIST, this, null, timeout)) {
 			state.setValue(SimpleState.CLOSE);
 		}
+
 	}
 
-	public void connectionCreate() {
+	public void handleConnection() {
 		try {
+			handle.sessionCreate(readBuf, writeBuf);
 			initState();
 		} catch (Exception e) {
 			state.setValue(SimpleState.CLOSE);
+			logger.warn(e.getMessage());
 		}
-	}
-
-	public void connectionClose() {
-
-	}
-
-	public void requestHandle() {
-
 	}
 
 	/**
@@ -150,12 +141,11 @@ public class SimpleConnection extends Connection implements IEventHandle {
 					state.setValue(SimpleState.WRITE_RES);
 					try {
 						// 处理请求
-						handle.doRequest(readBuf, writeBuf);
+						handle.sessionHandle(readBuf, writeBuf);
 						writeBuf.position(0);
 						// 注册新事件
-						worker.getEv().addEvent(socketChannel,
-								EventType.EV_WRITE | EventType.EV_PERSIST,
-								this, null, 0);
+						long timeout = worker.getServer().getReadTimeout();
+						worker.getEv().addEvent(socketChannel, EventType.EV_WRITE | EventType.EV_PERSIST, this, null, timeout);
 					} catch (Exception e) {
 						e.printStackTrace();
 						state.setValue(SimpleState.CLOSE);
@@ -171,10 +161,16 @@ public class SimpleConnection extends Connection implements IEventHandle {
 				} else if (ioState == IoState.GOON) {
 					stop = true;
 				} else {
-					if (server.isKeepalive()) {
-						initState();
-					} else {
-						state.setValue(SimpleState.CLOSE);
+					try {
+						handle.sessionClose(readBuf, writeBuf);
+						if (server.isKeepalive()) {
+							initState();
+						} else {
+							state.setValue(SimpleState.CLOSE);
+						}
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
 				break;
@@ -185,9 +181,10 @@ public class SimpleConnection extends Connection implements IEventHandle {
 				try {
 					// 删除原来注册的事件
 					worker.getEv().delEvent(socketChannel);
+					handle.sessionDestrory(readBuf, writeBuf);
 					socketChannel.socket().close();
 					ConnectionPool.free(this);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				stop = true;
@@ -204,5 +201,5 @@ public class SimpleConnection extends Connection implements IEventHandle {
 
 	enum IoState {
 		GOON, COMPLATE, ERROR
-	}
+	} 
 }

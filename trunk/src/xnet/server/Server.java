@@ -12,7 +12,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 
 import xnet.core.*;
-import xnet.event.*;
+import xnet.core.event.*;
 import xnet.io.IOBuffer;
 import xnet.test.Test;
 

@@ -66,10 +66,17 @@ public class Server {
 
 	protected IOBuffer pipeBuf = new IOBuffer(1);
 
+	/**
+	 * 长连接
+	 * @return
+	 */
 	public boolean isKeepalive() {
 		return keepalive;
 	}
-
+	/**
+	 * 设置长连接
+	 * @param keepalive
+	 */
 	public void setKeepalive(boolean keepalive) {
 		this.keepalive = keepalive;
 	}

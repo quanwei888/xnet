@@ -2,8 +2,8 @@ package xnet.core;
    
 import java.nio.channels.SocketChannel;
 
-import xnet.server.Server;
-import xnet.server.Worker;
+import xnet.core.model.Server;
+import xnet.core.model.Worker;
 
 
 public interface IConnection {	

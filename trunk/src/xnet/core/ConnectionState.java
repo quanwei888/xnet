@@ -1,5 +1,7 @@
 package xnet.core;
 
+import xnet.core.connection.IConnectionState;
+
 
 public class ConnectionState implements IConnectionState {
 	protected int value;

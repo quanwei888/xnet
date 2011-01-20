@@ -49,7 +49,12 @@ public class HttpHandle implements ISimpleHandle {
 
 	public int remain(IOBuffer buf) {
 		if (reqHeader == null) {
-			String sHeader = buf.toString();
+			String sHeader;
+			try {
+				sHeader = buf.getString();
+			} catch (UnsupportedEncodingException e) {
+				return -1;
+			}
 			int pos = sHeader.indexOf("\r\n\r\n");
 			if (pos >= 0) {
 				sHeader = sHeader.substring(0, pos);

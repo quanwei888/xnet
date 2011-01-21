@@ -8,7 +8,7 @@ import xnet.connection.http.HttpFactory;
 
 public class Server {
 	public static void main(String[] args) throws IOException {
-		//PropertyConfigurator.configure("/home/quanwei/myspace/quanwei/jworkspace/xnet/conf/log4j.properties");  
+		PropertyConfigurator.configure("/home/quanwei/myspace/quanwei/jworkspace/xnet/conf/log4j.properties");  
 		xnet.core.model.Server server = new xnet.core.model.Server();
 		server.setPort(8123);
 		server.setThreadNum(8);

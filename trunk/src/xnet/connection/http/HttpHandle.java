@@ -8,7 +8,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.core.*; 
+import xnet.core.*;
 import xnet.core.connection.ISimpleHandle;
 
 public class HttpHandle implements ISimpleHandle {

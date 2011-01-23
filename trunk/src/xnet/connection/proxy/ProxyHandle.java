@@ -7,10 +7,8 @@ import java.nio.channels.SocketChannel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.core.event.EventType;
-import xnet.core.event.IEventHandle;
-import xnet.core.model.Server;
-import xnet.core.model.Worker;
+import xnet.core.event.*;
+import xnet.core.model.*;
 
 public abstract class ProxyHandle implements IEventHandle {
 	public static long cReadTimeout = 0;

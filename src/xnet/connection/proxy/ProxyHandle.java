@@ -95,7 +95,7 @@ public abstract class ProxyHandle implements IEventHandle {
 		closeServer();
 	}
 
-	@Override
+	
 	public void onIOReady(SelectableChannel socket, int type, Object obj) {
 		logger.debug((SocketChannel)socket);
 		try {

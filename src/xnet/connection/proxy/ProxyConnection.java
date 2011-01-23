@@ -3,8 +3,8 @@ package xnet.connection.proxy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.core.Connection; 
-import xnet.core.connection.SimpleConnection; 
+import xnet.core.*; 
+import xnet.core.connection.*; 
 
 public class ProxyConnection extends Connection {
 	static Log logger = LogFactory.getLog(SimpleConnection.class);

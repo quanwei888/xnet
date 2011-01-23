@@ -6,12 +6,10 @@ import java.nio.channels.SocketChannel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.core.event.*;
-import xnet.core.connection.*;
 import xnet.core.model.*;
 
 public abstract class Connection implements IConnection {
-	static Log logger = LogFactory.getLog(Connection.class);
+	static Log logger = LogFactory.getLog(Connection.class); 
 
 	/**
 	 * ¾ä±ú

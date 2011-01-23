@@ -20,9 +20,8 @@ public class ProxyConnection extends Connection {
 	public void setHandle(ProxyHandle handle) {
 		this.handle = handle;
 	}
-
-	@Override
-	public void execute() {
+ 
+	public void execute() {  
 		logger.debug("execute");
 		handle.setcSocket(socketChannel);
 		handle.setWorker(worker);

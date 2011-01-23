@@ -12,13 +12,15 @@ import xnet.core.*;
 import xnet.core.event.*;
 
 public class MysqlProxyHandle extends ProxyHandle {
+	public static String host = "127.0.0.1";
+	public static int port = 3306;
+	
 	protected static Log logger = LogFactory.getLog(MysqlProxyHandle.class);
 	static int BUFFER_SIZE = 8192;
 
 	State state = null;
 	HandleState handleState = HandleState.HANDLE_READ;
-	static String host = "127.0.0.1";
-	static int port = 3306;
+	 
 
 	protected MysqlIOBuffer sReadBuffer;
 	protected MysqlIOBuffer cReadBuffer;

@@ -114,43 +114,10 @@ public abstract class ProxyHandle implements IEventHandle {
 		try {
 			handleServer(sSocket, EventType.EV_CONNECT);
 		} catch (Exception e) {
-			closeClient();
-			closeServer();
+			e.printStackTrace();
+			close();
 		}
 
-	}
-
-	protected void updateEvent(ProxyEvent nextEvent) {
-		if (nextEvent == null) {
-			return;
-		}
-		try {
-			logger.debug("lastEvent ev:" + nextEvent);
-			logger.debug("nextEvent ev:" + nextEvent);
-			lastEvent = nextEvent;
-			switch (nextEvent) {
-			case EV_CREAD:
-				addEvent(cSocket, EventType.EV_READ, cReadTimeout);
-				break;
-			case EV_SWRITE:
-				addEvent(sSocket, EventType.EV_WRITE, sWriteTimeout);
-				break;
-			case EV_SREAD:
-				addEvent(sSocket, EventType.EV_READ, sReadTimeout);
-				break;
-			case EV_CWRITE:
-				addEvent(cSocket, EventType.EV_WRITE, cWriteTimeout);
-				break;
-			case EV_CLOSE:
-			default:
-				closeClient();
-				closeServer();
-				break;
-			}
-		} catch (Exception e) {
-			closeClient();
-			closeServer();
-		}
 	}
 
 	protected void addEvent(SocketChannel socket, int type, long timeout)

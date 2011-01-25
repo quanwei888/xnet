@@ -1,4 +1,4 @@
-package xnet.core;
+package xnet.core.io;
 
 public enum IOState {
 	GOON,

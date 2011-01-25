@@ -9,7 +9,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory; 
 
 import xnet.core.*;
+import xnet.core.connection.ConnectionPool;
+import xnet.core.connection.IConnection;
 import xnet.core.event.*; 
+import xnet.core.io.IOBuffer;
 
 
 public class Worker implements Runnable {

@@ -1,4 +1,4 @@
-package xnet.core;
+package xnet.core.connection;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
@@ -6,6 +6,8 @@ import java.nio.channels.SocketChannel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import xnet.core.io.IOBuffer;
+import xnet.core.io.IOState;
 import xnet.core.model.*;
 
 public abstract class Connection implements IConnection {

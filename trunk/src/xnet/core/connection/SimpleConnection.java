@@ -50,8 +50,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	protected void initState() throws Exception {
 		state.setValue(SimpleState.READ_REQ);
 		handle.sessionOpen(readBuf, writeBuf);
-		long timeout = worker.getServer().getReadTimeout();
-		worker.getEv().addEvent(socket, EventType.EV_READ | EventType.EV_PERSIST, this, null, timeout);
+		worker.addEvent(socket, EventType.EV_READ | EventType.EV_PERSIST, this, 0);
 	}
 
 	public void execute() {
@@ -103,8 +102,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 						handle.sessionHandle(readBuf, writeBuf);
 						writeBuf.position(0);
 						// 注册新事件
-						long timeout = worker.getServer().getReadTimeout();
-						worker.getEv().addEvent(socket, EventType.EV_WRITE | EventType.EV_PERSIST, this, null, timeout);
+						worker.addEvent(socket, EventType.EV_WRITE | EventType.EV_PERSIST, this, 0);
 					} catch (Exception e) {
 						e.printStackTrace();
 						state.setValue(SimpleState.CLOSE);
@@ -122,11 +120,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 				} else {
 					try {
 						handle.sessionClose(readBuf, writeBuf);
-						if (server.isKeepalive()) {
-							initState();
-						} else {
-							state.setValue(SimpleState.CLOSE);
-						}
+						state.setValue(SimpleState.CLOSE);
 					} catch (Exception e) {
 						state.setValue(SimpleState.CLOSE);
 						logger.warn(e.getMessage());
@@ -139,7 +133,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 				logger.debug("close connection");
 				try {
 					// 删除原来注册的事件
-					worker.getEv().delEvent(socket);
+					worker.delEvent(socket);
 					handle.sessionDestrory(readBuf, writeBuf);
 					socket.socket().close();
 					ConnectionPool.free(this);

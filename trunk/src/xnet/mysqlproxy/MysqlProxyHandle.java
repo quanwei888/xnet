@@ -6,7 +6,7 @@ import java.nio.channels.SocketChannel;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
- 
+
 import xnet.core.connection.ProxyHandle;
 import xnet.core.event.*;
 import xnet.core.io.IOState;
@@ -54,11 +54,11 @@ public class MysqlProxyHandle extends ProxyHandle {
 	protected void selectIO() throws Exception {
 		sReadBuffer.clear();
 		sReadBuffer.limit(BUFFER_SIZE);
-		addEvent(sSocket, EventType.EV_READ, cReadTimeout);
+		worker.addEvent(sSocket, EventType.EV_READ, this, cReadTimeout);
 
 		cReadBuffer.clear();
 		cReadBuffer.limit(BUFFER_SIZE);
-		addEvent(cSocket, EventType.EV_READ, sReadTimeout);
+		worker.addEvent(cSocket, EventType.EV_READ, this, sReadTimeout);
 	}
 
 	/**
@@ -112,11 +112,12 @@ public class MysqlProxyHandle extends ProxyHandle {
 
 	String getByteString(byte[] bytes) {
 		String hex = "";
-		for(byte b : bytes) {
+		for (byte b : bytes) {
 			hex += String.format("%X,", b);
 		}
 		return hex;
 	}
+
 	/**
 	 * 处理client或server的io事件
 	 * 
@@ -169,13 +170,12 @@ public class MysqlProxyHandle extends ProxyHandle {
 					return;
 				}
 
-				
 				rbuf.limit(rbuf.position());
 				int endPos = getLastPacketEndPos(rbuf);
 				if (endPos == -1) {
 					// 还未读完一个包
 					rbuf.limit(rbuf.limit() + BUFFER_SIZE);
-					addEvent(socket, EventType.EV_READ, rtimeout);
+					worker.addEvent(socket, EventType.EV_READ, this, rtimeout);
 					break;
 				}
 
@@ -203,7 +203,7 @@ public class MysqlProxyHandle extends ProxyHandle {
 				logger.debug(rbuf.getBuf());
 
 				// 读完至少一个packet完成，切换到写
-				addEvent(rtosocket, EventType.EV_WRITE, rtotimeout);
+				worker.addEvent(rtosocket, EventType.EV_WRITE, this, rtotimeout);
 				handleState = HandleState.HANDLE_WRITE;
 				mysqlState = mysqlState.switchIO(rtosocket == cSocket ? IODirection.WRITE_CLIENT : IODirection.WRITE_SERVER);
 				break;
@@ -217,7 +217,7 @@ public class MysqlProxyHandle extends ProxyHandle {
 
 				// IO继续
 				if (ioState == IOState.GOON) {
-					addEvent(socket, EventType.EV_WRITE, wtimeout);
+					worker.addEvent(socket, EventType.EV_WRITE, this, wtimeout);
 					break;
 				}
 

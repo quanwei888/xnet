@@ -112,21 +112,29 @@ public class IOBuffer {
 		buf.get(bytes);
 		return bytes;
 	}
+	
+
+	public String readString(int len) {
+		return readString(buf.position(), len);
+	}
+
+	public String readString(int index, int len) {
+		if (len == 0) {
+			return "";
+		}
+		buf.position(index);
+		byte[] bytes = readBytes(len);
+		try {
+			return new String(bytes, charset);
+		} catch (UnsupportedEncodingException e) {
+			return "";
+		}
+	}
 
 	public String toString() {
 		return buf.toString();
 	}
-	
-	public String getString() throws UnsupportedEncodingException {
-		int pos = buf.position();
-		int len = pos;
-		byte[] bytes = new byte[len];
-		buf.position(0);
-		buf.get(bytes, 0, len);
-		buf.position(pos);
-		return new String(bytes, charset);
-	}
-
+	 
 	public void putString(String str) throws UnsupportedEncodingException {
 		byte[] bytes = str.getBytes(charset);
 		limit(buf.position() + bytes.length);

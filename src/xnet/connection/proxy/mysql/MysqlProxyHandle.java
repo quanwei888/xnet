@@ -109,6 +109,13 @@ public class MysqlProxyHandle extends ProxyHandle {
 		return pos > 0 && pos <= buffer.limit() ? count : -1;
 	}
 
+	String getByteString(byte[] bytes) {
+		String hex = "";
+		for(byte b : bytes) {
+			hex += String.format("%X,", b);
+		}
+		return hex;
+	}
 	/**
 	 * 处理client或server的io事件
 	 * 
@@ -161,6 +168,7 @@ public class MysqlProxyHandle extends ProxyHandle {
 					return;
 				}
 
+				
 				rbuf.limit(rbuf.position());
 				int endPos = getLastPacketEndPos(rbuf);
 				if (endPos == -1) {
@@ -184,6 +192,7 @@ public class MysqlProxyHandle extends ProxyHandle {
 				rtobuf.getBuf().put(bytes);
 				rtobuf.position(0);
 
+				logger.debug(getByteString(bytes));
 				/* 将未写出去的数据往前移到 */
 				rbuf.position(limit);
 				rbuf.getBuf().compact();

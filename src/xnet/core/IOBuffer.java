@@ -146,5 +146,8 @@ public class IOBuffer {
 	public short getShort(int index) {
 		return buf.getShort(index);
 	}
+	public String toString() {
+		return buf.toString();
+	}
 
 }

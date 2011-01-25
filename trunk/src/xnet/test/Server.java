@@ -4,7 +4,7 @@ import java.io.IOException;
  
 import org.apache.log4j.PropertyConfigurator;
 
-import xnet.connection.http.HttpFactory;
+import xnet.http.HttpFactory;
 
 public class Server {
 	public static void main(String[] args) throws IOException {

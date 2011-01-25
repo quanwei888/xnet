@@ -49,23 +49,7 @@ public class MysqlIOBuffer extends IOBuffer {
 		}
 		return -1;
 	}
-
-	public String readString(int len) {
-		return readString(buf.position(), len);
-	}
-
-	public String readString(int index, int len) {
-		if (len == 0) {
-			return "";
-		}
-		buf.position(index);
-		byte[] bytes = readBytes(len);
-		try {
-			return new String(bytes, charset);
-		} catch (UnsupportedEncodingException e) {
-			return "";
-		}
-	}
+ 
 
 	public PacketResult readResultPacket() {
 		return readResultPacket(buf.position());

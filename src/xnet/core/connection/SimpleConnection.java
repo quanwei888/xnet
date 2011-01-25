@@ -40,9 +40,11 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	public void setHandle(ISimpleHandle handle) {
 		this.handle = handle;
 	}
+
 	IOState read() {
 		return nwrite(socketChannel, readBuf);
 	}
+
 	IOState write() {
 		return nwrite(socketChannel, writeBuf);
 	}
@@ -51,10 +53,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 		state.setValue(SimpleState.READ_REQ);
 		handle.sessionOpen(readBuf, writeBuf);
 		long timeout = worker.getServer().getReadTimeout();
-		if (!worker.getEv().addEvent(socketChannel,
-				EventType.EV_READ | EventType.EV_PERSIST, this, null, timeout)) {
-			state.setValue(SimpleState.CLOSE);
-		}
+		worker.getEv().addEvent(socketChannel, EventType.EV_READ | EventType.EV_PERSIST, this, null, timeout);
 	}
 
 	public void execute() {
@@ -70,7 +69,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	/**
 	 * 异步的io事件处理
 	 */
-	public void onIOReady(SelectableChannel select, int type, Object obj) {
+	public void onIOEvent(SelectableChannel select, int type, Object obj) {
 		boolean stop = false;
 		IOState ioState = IOState.ERROR;
 		logger.debug("connection event start:" + type);
@@ -107,9 +106,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 						writeBuf.position(0);
 						// 注册新事件
 						long timeout = worker.getServer().getReadTimeout();
-						worker.getEv().addEvent(socketChannel,
-								EventType.EV_WRITE | EventType.EV_PERSIST,
-								this, null, timeout);
+						worker.getEv().addEvent(socketChannel, EventType.EV_WRITE | EventType.EV_PERSIST, this, null, timeout);
 					} catch (Exception e) {
 						e.printStackTrace();
 						state.setValue(SimpleState.CLOSE);

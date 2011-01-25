@@ -97,7 +97,6 @@ public abstract class ProxyHandle implements IEventHandle {
 
 	
 	public void onIOReady(SelectableChannel socket, int type, Object obj) {
-		logger.debug((SocketChannel)socket);
 		try {
 			if (socket == cSocket) {
 				handleClient(cSocket, type);

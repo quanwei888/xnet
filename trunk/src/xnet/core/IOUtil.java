@@ -12,15 +12,15 @@ public class IOUtil {
 	/**
 	 * ´ÓÍøÂç¶Ábuffer
 	 * 
-	 * @param socketChannel
+	 * @param socket
 	 * @param buf
 	 * @return
 	 */
-	public static IOState nread(SocketChannel socketChannel, IOBuffer readBuf) {
+	public static IOState nread(SocketChannel socket, IOBuffer readBuf) {
 		try {
 			int remain = readBuf.remaining();
-			int len = socketChannel.read(readBuf.getBuf());
-			logger.debug("remain:" + remain + ",read len:" + len);
+			int len = socket.read(readBuf.getBuf());
+			logger.debug("read from " + socket.socket().getRemoteSocketAddress() + ",remain:" + remain + ",read len:" + len);
 			if (len == -1) {
 				return IOState.CLOSE;
 			}
@@ -43,15 +43,15 @@ public class IOUtil {
 	 * @param buf
 	 * @return
 	 */
-	public static IOState nwrite(SocketChannel socketChannel, IOBuffer writeBuf) {
+	public static IOState nwrite(SocketChannel socket, IOBuffer writeBuf) {
 		try {
 			int remain = writeBuf.remaining();
-			int len = socketChannel.write(writeBuf.getBuf());
-			logger.debug("remain:" + remain + ",write len:" + len);
+			int len = socket.write(writeBuf.getBuf());
+			logger.debug("write to " + socket.socket().getRemoteSocketAddress() +",remain:" + remain + ",write len:" + len);
 
 			if (len == -1) {
 				return IOState.CLOSE;
-			}
+			}			
 			if (writeBuf.remaining() == 0) {
 				return IOState.COMPLATE;
 			} else {

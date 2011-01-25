@@ -75,6 +75,48 @@ public class IOBuffer {
 		buf.clear();
 	}
 
+
+
+	public int readUInt8() {
+		return readUInt8(buf.position());
+	}
+
+	public int readUInt8(int index) {
+		return readByte(index) & 0xff;
+	}
+
+	public int readUInt16() {
+		return readUInt16(buf.position());
+	}
+
+	public int readUInt16(int index) {
+		return ((readByte() & 0xff) << 8) | (readByte() & 0xff);
+	}
+
+	public byte readByte() {
+		return readByte(buf.position());
+	}
+
+	public byte readByte(int index) {
+		buf.position(index);
+		return buf.get();
+	}
+
+	public byte[] readBytes(int len) {
+		return readBytes(buf.position(), len);
+	}
+
+	public byte[] readBytes(int index, int len) {
+		byte[] bytes = new byte[len];
+		buf.position(index);
+		buf.get(bytes);
+		return bytes;
+	}
+
+	public String toString() {
+		return buf.toString();
+	}
+	
 	public String getString() throws UnsupportedEncodingException {
 		int pos = buf.position();
 		int len = pos;
@@ -89,65 +131,6 @@ public class IOBuffer {
 		byte[] bytes = str.getBytes(charset);
 		limit(buf.position() + bytes.length);
 		buf.put(bytes);
-	}
-
-	public byte get() {
-		return buf.get();
-	}
-
-	public byte get(int index) {
-		return buf.get(index);
-	}
-
-	public char getChar() {
-		return buf.getChar();
-	}
-
-	public char getChar(int index) {
-		return buf.getChar(index);
-	}
-
-	public double getDouble() {
-		return buf.getDouble();
-	}
-
-	public double getDouble(int index) {
-		return buf.getDouble(index);
-	}
-
-	public float getFloat() {
-		return buf.getFloat();
-	}
-
-	public float getFloat(int index) {
-		return buf.getFloat(index);
-	}
-
-	public int getInt() {
-		return buf.getInt();
-	}
-
-	public int getInt(int index) {
-		return buf.getInt(index);
-	}
-
-	public long getLong() {
-		return buf.getLong();
-	}
-
-	public long getLong(int index) {
-		return buf.getLong(index);
-	}
-
-	public short getShort() {
-		return buf.getShort();
-	}
-
-	public short getShort(int index) {
-		return buf.getShort(index);
-	}
-	public String toString() {
-		return buf.toString();
 	}
 
 }

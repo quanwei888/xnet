@@ -6,8 +6,7 @@ import java.nio.channels.SocketChannel;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import xnet.core.*;
+ 
 import xnet.core.connection.ProxyHandle;
 import xnet.core.event.*;
 import xnet.core.io.IOState;

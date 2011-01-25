@@ -1,6 +1,5 @@
 package xnet.mysqlproxy;
-
-import xnet.core.*; 
+ 
 import xnet.core.connection.IConnection;
 import xnet.core.connection.IConnectionFactory;
 import xnet.core.connection.ProxyConnection;

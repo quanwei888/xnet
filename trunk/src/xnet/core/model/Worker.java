@@ -7,8 +7,7 @@ import java.nio.channels.SelectableChannel;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory; 
-
-import xnet.core.*;
+ 
 import xnet.core.connection.ConnectionPool;
 import xnet.core.connection.IConnection;
 import xnet.core.event.*; 

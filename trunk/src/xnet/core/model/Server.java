@@ -9,7 +9,7 @@ import java.nio.channels.SocketChannel;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
- 
+
 import xnet.core.connection.ConnectionPool;
 import xnet.core.connection.IConnection;
 import xnet.core.connection.IConnectionFactory;
@@ -19,7 +19,8 @@ import xnet.core.io.IOBuffer;
 public class Server {
 	static Log logger = LogFactory.getLog(Server.class);
 
-	protected ServerSocketChannel serverSocketChannel = null;
+	protected ServerSocketChannel socket = null;
+
 	protected EventManager ev = null;
 	/**
 	 * 端口号
@@ -71,13 +72,16 @@ public class Server {
 
 	/**
 	 * 长连接
+	 * 
 	 * @return
 	 */
 	public boolean isKeepalive() {
 		return keepalive;
 	}
+
 	/**
 	 * 设置长连接
+	 * 
 	 * @param keepalive
 	 */
 	public void setKeepalive(boolean keepalive) {
@@ -134,14 +138,14 @@ public class Server {
 	 * @throws IOException
 	 */
 	public void run() throws IOException {
-		serverSocketChannel = ServerSocketChannel.open();
-		serverSocketChannel.socket().setReuseAddress(true);
-		serverSocketChannel.configureBlocking(false);
-		serverSocketChannel.socket().bind(new InetSocketAddress(port));
+		socket = ServerSocketChannel.open();
+		socket.socket().setReuseAddress(true);
+		socket.configureBlocking(false);
+		socket.socket().bind(new InetSocketAddress(port));
 
 		initThread();
-		ev = new EventManager(); 
-		ev.addEvent(serverSocketChannel, EventType.EV_ACCEPT | EventType.EV_PERSIST, new Server.ServerHandle(), this, 0);
+		ev = new EventManager();
+		ev.addEvent(socket, EventType.EV_ACCEPT | EventType.EV_PERSIST, new Server.ServerHandle(), this, 0);
 		ev.loop();
 	}
 
@@ -172,36 +176,35 @@ public class Server {
 	 * 
 	 */
 	class ServerHandle implements IEventHandle {
-		public void onIOEvent(SelectableChannel select, int type, Object obj) {
-			ServerSocketChannel serverSocketChannel = (ServerSocketChannel) select;
-			SocketChannel socketChannel = null;
+		public void onIOEvent(SelectableChannel socket, int type, Object obj) {
+			ServerSocketChannel serverSocketChannel = (ServerSocketChannel) socket;
+			SocketChannel csocket = null;
 			Server server = (Server) obj;
 			try {
-				socketChannel = serverSocketChannel.accept();
-				logger.debug("\n---------------------\nserver accetp," + socketChannel);
+				csocket = serverSocketChannel.accept();
+				logger.debug("server accetp," + csocket);
 				IConnection conn = ConnectionPool.alloc();
 				if (conn == null) {
 					logger.debug("too many connection");
 					return;
 				}
-				// logger.debug(socketChannel + conn.toString());
-				socketChannel.configureBlocking(false);
 
-				conn.setSocketChannel(socketChannel);
+				csocket.configureBlocking(false);
+				conn.setSocket(csocket);
 				ConnectionPool.pushQueue(conn);
 
 				lastThread++;
 				pipeBuf.clear();
 				workers[lastThread % server.threadNum].sinkChannel.write(pipeBuf.getBuf());
 			} catch (Exception e) {
+				logger.warn(e.getStackTrace());
 				try {
-					if (socketChannel != null) {
-						socketChannel.close();
+					if (csocket != null) {
+						csocket.close();
 					}
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					logger.warn(e.getStackTrace());
 				}
-				e.printStackTrace();
 			}
 		}
 	}

@@ -51,9 +51,9 @@ public interface IConnection {
 	/**
 	 * 设置连接对应的SocketChannel
 	 * 
-	 * @param socketChannel
+	 * @param socket
 	 */
-	public void setSocketChannel(SocketChannel socketChannel);
+	public void setSocket(SocketChannel socket);
 
 	/**
 	 * 获取连接对应的SocketChannel

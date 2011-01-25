@@ -40,18 +40,18 @@ public class SimpleConnection extends Connection implements IEventHandle {
 	}
 
 	IOState read() {
-		return nwrite(socketChannel, readBuf);
+		return nwrite(socket, readBuf);
 	}
 
 	IOState write() {
-		return nwrite(socketChannel, writeBuf);
+		return nwrite(socket, writeBuf);
 	}
 
 	protected void initState() throws Exception {
 		state.setValue(SimpleState.READ_REQ);
 		handle.sessionOpen(readBuf, writeBuf);
 		long timeout = worker.getServer().getReadTimeout();
-		worker.getEv().addEvent(socketChannel, EventType.EV_READ | EventType.EV_PERSIST, this, null, timeout);
+		worker.getEv().addEvent(socket, EventType.EV_READ | EventType.EV_PERSIST, this, null, timeout);
 	}
 
 	public void execute() {
@@ -104,7 +104,7 @@ public class SimpleConnection extends Connection implements IEventHandle {
 						writeBuf.position(0);
 						// 注册新事件
 						long timeout = worker.getServer().getReadTimeout();
-						worker.getEv().addEvent(socketChannel, EventType.EV_WRITE | EventType.EV_PERSIST, this, null, timeout);
+						worker.getEv().addEvent(socket, EventType.EV_WRITE | EventType.EV_PERSIST, this, null, timeout);
 					} catch (Exception e) {
 						e.printStackTrace();
 						state.setValue(SimpleState.CLOSE);
@@ -139,9 +139,9 @@ public class SimpleConnection extends Connection implements IEventHandle {
 				logger.debug("close connection");
 				try {
 					// 删除原来注册的事件
-					worker.getEv().delEvent(socketChannel);
+					worker.getEv().delEvent(socket);
 					handle.sessionDestrory(readBuf, writeBuf);
-					socketChannel.socket().close();
+					socket.socket().close();
 					ConnectionPool.free(this);
 				} catch (Exception e) {
 					logger.warn(e.getMessage());

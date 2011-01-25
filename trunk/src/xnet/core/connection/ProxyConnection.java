@@ -2,7 +2,6 @@ package xnet.core.connection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
- 
 
 public class ProxyConnection extends Connection {
 	static Log logger = LogFactory.getLog(SimpleConnection.class);
@@ -18,14 +17,12 @@ public class ProxyConnection extends Connection {
 	public void setHandle(ProxyHandle handle) {
 		this.handle = handle;
 	}
- 
-	public void execute() {  
-		logger.debug("execute");
-		handle.setcSocket(socketChannel);
+
+	public void execute() {
+		logger.debug("new connection");
+		handle.setcSocket(socket);
 		handle.setWorker(worker);
 		handle.handleConnection();
 	}
- 
- 
 
 }

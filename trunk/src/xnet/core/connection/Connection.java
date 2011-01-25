@@ -16,7 +16,7 @@ public abstract class Connection implements IConnection {
 	/**
 	 * 句柄
 	 */
-	protected SocketChannel socketChannel;
+	protected SocketChannel socket;
 	/**
 	 * 当前工作线程
 	 */
@@ -31,11 +31,11 @@ public abstract class Connection implements IConnection {
 	protected boolean use = false;
 
 	public SocketChannel getSocketChannel() {
-		return socketChannel;
+		return socket;
 	}
 
-	public void setSocketChannel(SocketChannel socketChannel) {
-		this.socketChannel = socketChannel;
+	public void setSocket(SocketChannel socketChannel) {
+		this.socket = socketChannel;
 	}
 
 	public Worker getWorker() {

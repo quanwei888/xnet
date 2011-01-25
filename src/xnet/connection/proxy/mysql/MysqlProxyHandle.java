@@ -2,25 +2,25 @@ package xnet.connection.proxy.mysql;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.SocketChannel; 
+import java.nio.channels.SocketChannel;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
- 
-import xnet.connection.proxy.ProxyHandle; 
+
+import xnet.connection.proxy.ProxyHandle;
 import xnet.core.*;
 import xnet.core.event.*;
 
 public class MysqlProxyHandle extends ProxyHandle {
 	public static String host = "127.0.0.1";
 	public static int port = 3306;
-	
+
 	protected static Log logger = LogFactory.getLog(MysqlProxyHandle.class);
 	static int BUFFER_SIZE = 8192;
 
-	State state = null;
-	HandleState handleState = HandleState.HANDLE_READ;
-	 
+	MysqlState mysqlState;
+	IODirection direction;
+	HandleState handleState;
 
 	protected MysqlIOBuffer sReadBuffer;
 	protected MysqlIOBuffer cReadBuffer;
@@ -52,7 +52,7 @@ public class MysqlProxyHandle extends ProxyHandle {
 	 */
 	protected void selectIO() throws Exception {
 		sReadBuffer.clear();
-		sReadBuffer.limit(BUFFER_SIZE); 
+		sReadBuffer.limit(BUFFER_SIZE);
 		addEvent(sSocket, EventType.EV_READ, cReadTimeout);
 
 		cReadBuffer.clear();
@@ -63,7 +63,7 @@ public class MysqlProxyHandle extends ProxyHandle {
 	/**
 	 * 获取已读完的数据中最后一个完整包的结束位置
 	 */
-	int getLastPacketEndPos(MysqlIOBuffer buffer) {
+	public static int getLastPacketEndPos(MysqlIOBuffer buffer) {
 		int pos = 0;
 		int size = 0;
 
@@ -75,7 +75,43 @@ public class MysqlProxyHandle extends ProxyHandle {
 	}
 
 	/**
+	 * 获取已读完的数据中最后一个完整包的起始位置
+	 */
+	public static int getLastPacketStartPos(MysqlIOBuffer buffer) {
+		int pos = 0;
+		int size = 0;
+		int spos = pos;
+
+		while (pos + 4 <= buffer.limit()) {
+			size = buffer.getBodyLen(pos);
+			spos = pos;
+			pos += 4 + size;
+		}
+		return pos > 0 && pos <= buffer.limit() ? spos : -1;
+	}
+
+	/**
+	 * 获取一共读完多少个packet
+	 * 
+	 * @param buffer
+	 * @return
+	 */
+	public static int getPacketCount(MysqlIOBuffer buffer) {
+		int pos = 0;
+		int size = 0;
+		int count = -1;
+
+		while (pos + 4 <= buffer.limit()) {
+			size = buffer.getBodyLen(pos);
+			pos += 4 + size;
+			count++;
+		}
+		return pos > 0 && pos <= buffer.limit() ? count : -1;
+	}
+
+	/**
 	 * 处理client或server的io事件
+	 * 
 	 * @param socket
 	 * @param rtosocket
 	 * @param type
@@ -87,11 +123,11 @@ public class MysqlProxyHandle extends ProxyHandle {
 	 * @param wtimeout
 	 * @throws Exception
 	 */
-	void handle(SocketChannel socket, SocketChannel rtosocket, int type,
-			MysqlIOBuffer rbuf, MysqlIOBuffer rtobuf, MysqlIOBuffer wbuf,
-			long rtimeout, long rtotimeout, long wtimeout) throws Exception {
+	void handle(SocketChannel socket, SocketChannel rtosocket, int type, MysqlIOBuffer rbuf, MysqlIOBuffer rtobuf, MysqlIOBuffer wbuf, long rtimeout, long rtotimeout, long wtimeout) throws Exception {
 		IOState ioState = null;
 		boolean stop = true;
+
+		logger.debug("current state:" + handleState);
 
 		do {
 			stop = true;
@@ -100,6 +136,9 @@ public class MysqlProxyHandle extends ProxyHandle {
 				// 新链接建立
 				connectServer();
 				selectIO();
+				direction = IODirection.READ_SERVER;
+				handleState = HandleState.HANDLE_READ;
+				mysqlState = new MysqlStateRSInit();
 				break;
 			case EventType.EV_READ:
 				if (handleState == HandleState.HANDLE_WRITE) {
@@ -153,9 +192,10 @@ public class MysqlProxyHandle extends ProxyHandle {
 				rbuf.limit(limit + BUFFER_SIZE);
 				logger.debug(rbuf.getBuf());
 
-				// 切换到写
+				// 读完至少一个packet完成，切换到写
 				addEvent(rtosocket, EventType.EV_WRITE, rtotimeout);
 				handleState = HandleState.HANDLE_WRITE;
+				mysqlState = mysqlState.switchIO(rtosocket == cSocket ? IODirection.WRITE_CLIENT : IODirection.WRITE_SERVER);
 				break;
 			case EventType.EV_WRITE:
 				// 将sWriteBuffer内容写到server
@@ -171,12 +211,14 @@ public class MysqlProxyHandle extends ProxyHandle {
 					break;
 				}
 
-				// IO完成
+				// 写操作完成,切换到读
 				selectIO();
 				handleState = HandleState.HANDLE_READ;
+				mysqlState = mysqlState.switchIO(rtosocket == cSocket ? IODirection.READ_CLIENT : IODirection.READ_SERVER);
 				break;
 			}
 		} while (!stop);
+		logger.debug("current state:" + handleState);
 	}
 
 	@Override
@@ -190,8 +232,7 @@ public class MysqlProxyHandle extends ProxyHandle {
 		long wtimeout = sWriteTimeout;
 		SocketChannel rtosocket = cSocket;
 
-		handle(socket, rtosocket, type, rbuf, rtobuf, wbuf, rtimeout,
-				rtotimeout, wtimeout);
+		handle(socket, rtosocket, type, rbuf, rtobuf, wbuf, rtimeout, rtotimeout, wtimeout);
 	}
 
 	@Override
@@ -205,37 +246,227 @@ public class MysqlProxyHandle extends ProxyHandle {
 		long wtimeout = cWriteTimeout;
 		SocketChannel rtosocket = sSocket;
 
-		handle(socket, rtosocket, type, rbuf, rtobuf, wbuf, rtimeout,
-				rtotimeout, wtimeout);
+		handle(socket, rtosocket, type, rbuf, rtobuf, wbuf, rtimeout, rtotimeout, wtimeout);
+	}
+
+	interface MysqlState {
+		public MysqlState switchIO(IODirection nextDirection) throws Exception;
+	}
+
+	/**
+	 * read init from server
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateRSInit implements MysqlState {
+		public MysqlStateRSInit() {
+			logger.debug("New State:" + MysqlStateRSInit.class);
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) {
+			return new MysqlStateWCInit();
+		}
+	}
+
+	/**
+	 * write init to client
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateWCInit implements MysqlState {
+		public MysqlStateWCInit() {
+			logger.debug("New State:" + MysqlStateWCInit.class);
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) {
+			return new MysqlStateRCAuth();
+		}
+	}
+
+	/**
+	 * read auth from client
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateRCAuth implements MysqlState {
+		public MysqlStateRCAuth() {
+			logger.debug("New State:" + MysqlStateRCAuth.class);
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) {
+			return new MysqlStateWSAuth();
+		}
+	}
+
+	/**
+	 * write auth to server
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateWSAuth implements MysqlState {
+		public MysqlStateWSAuth() {
+			logger.debug("New State:" + MysqlStateWSAuth.class);
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) {
+			return new MysqlStateRSResult();
+		}
+	}
+
+	/**
+	 * read result from server
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateRSResult implements MysqlState {
+		public MysqlStateRSResult() {
+			logger.debug("New State:" + MysqlStateRSResult.class);
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) {
+			return new MysqlStateWCResult();
+		}
+	}
+
+	/**
+	 * write result to client
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateWCResult implements MysqlState {
+		public MysqlStateWCResult() {
+			logger.debug("New State:" + MysqlStateWCResult.class);
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) throws Exception {
+			cWriteBuffer.position(0);
+			PacketResult result = cWriteBuffer.readResultPacket();
+			if (result instanceof PacketResultData) {
+				return new MysqlStateRSData(((PacketResultData) result).fieldCount);
+			} else {
+				return new MysqlStateRCCommond();
+			}
+		}
+	}
+
+	/**
+	 * read commond from client
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateRCCommond implements MysqlState {
+		public MysqlStateRCCommond() {
+			logger.debug("New State:" + MysqlStateRCCommond.class);
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) {
+			return new MysqlStateWSCommond();
+		}
+	}
+
+	/**
+	 * write commond to server
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateWSCommond implements MysqlState {
+		public MysqlStateWSCommond() {
+			logger.debug("New State:" + MysqlStateWSCommond.class);
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) {
+			sWriteBuffer.position(0);
+			PacketCommond commond = sWriteBuffer.readPacketCommond();
+			logger.debug("SQL:" + commond.cmd);
+			return new MysqlStateRSResult();
+		}
+	}
+
+	/**
+	 * read field data from server
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateRSData implements MysqlState {
+		long fieldCount;
+		long fieldRemain;
+
+		public MysqlStateRSData(long fieldCount) throws Exception {
+			logger.debug("New State:" + MysqlStateRSData.class);
+			this.fieldCount = fieldCount + 1;
+			this.fieldRemain = this.fieldCount;
+
+			cWriteBuffer.position(0);
+			int count = MysqlProxyHandle.getPacketCount(cWriteBuffer) - 1;
+			if (count == -1) {
+				throw new Exception("getPacketCount error");
+			}
+			fieldRemain -= count;
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) {
+			return new MysqlStateWCData(this);
+		}
+
+		public boolean isEnd() throws Exception {
+			if (fieldRemain > 0) {
+				cWriteBuffer.position(0);
+				int count = MysqlProxyHandle.getPacketCount(cWriteBuffer);
+				if (count == -1) {
+					throw new Exception("getPacketCount error");
+				}
+				fieldRemain -= count;
+			}
+			if (fieldRemain < 0) {
+				cWriteBuffer.position(0);
+				int pos = getLastPacketStartPos(cWriteBuffer);
+				PacketResult result = cWriteBuffer.readResultPacket(pos);
+				if (result instanceof PacketResultEof) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+
+	/**
+	 * write field data to client
+	 * 
+	 * @author quanwei
+	 * 
+	 */
+	class MysqlStateWCData implements MysqlState {
+		MysqlStateRSData mysqlState;
+
+		public MysqlStateWCData(MysqlStateRSData mysqlState) {
+			this.mysqlState = mysqlState;
+			logger.debug("New State:" + MysqlStateWCData.class);
+		}
+
+		public MysqlState switchIO(IODirection nextDirection) throws Exception {
+			if (mysqlState.isEnd()) {
+				return new MysqlStateRCCommond();
+			} else {
+				logger.debug("New State:" + MysqlStateRSData.class);
+				return mysqlState;
+			}
+		}
 	}
 
 	enum HandleState {
-		HANDLE_WRITE,
-		HANDLE_READ
+		HANDLE_WRITE, HANDLE_READ
 	}
 
-	enum State {
-		READ_SERVER_INIT,
-		WRITE_CLIENT_INIT,
-
-		READ_CLIENT_AUTH,
-		WRITE_SERVER_AUTh,
-
-		READ_SERVER_RESULT,
-		WRITE_CLIENT_RESULT,
-
-		READ_CLIENT_COMMOND,
-		WRITE_SERVER_COMMOND,
-
-		READ_SERVER_FIELDS,
-		WRITE_CLIENT_FIELDS,
-
-		READ_SERVER_DATA,
-		WRITE_CLIENT_DATA,
-
-		READ_CLINET_DATA,
-		WRITE_SERVER_DATA
-
+	enum IODirection {
+		READ_CLIENT, READ_SERVER, WRITE_CLIENT, WRITE_SERVER,
 	}
-
 }

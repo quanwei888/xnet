@@ -50,11 +50,9 @@ public class EventManager {
 	 *            超时时间
 	 * @throws ClosedChannelException
 	 */
-	public boolean addEvent(SelectableChannel channel, int type,
-			IEventHandle evHandle, Object obj, long timeout) {
+	public boolean addEvent(SelectableChannel channel, int type, IEventHandle evHandle, Object obj, long timeout) {
 		try {
-			EventAttr attr = new EventManager.EventAttr(type, evHandle,
-					timeout, obj, channel);
+			EventAttr attr = new EventManager.EventAttr(type, evHandle, timeout, obj, channel);
 			eventSet.add(attr);
 		} catch (Exception e) {
 			logger.warn(e.getMessage());
@@ -79,16 +77,14 @@ public class EventManager {
 
 	protected void updateKeys() throws IOException {
 		// 首先删除cacel状态的key
-		logger.debug("aaaaaa");
 		if (selector.keys().size() > 0) {
 			selector.selectNow();
 		}
-		logger.debug("bbbbbbb");
 		// 更新key
 		Iterator<EventAttr> it = eventSet.iterator();
 		while (it.hasNext()) {
 			EventAttr attr = it.next();
-			
+
 			int type = attr.type;
 			long timeout = attr.timeout;
 			int evSet = 0;
@@ -120,9 +116,7 @@ public class EventManager {
 			long stime = System.currentTimeMillis();
 			int ret;
 			try {
-				logger.debug("update keys");
 				updateKeys();
-				logger.debug("keys count:" + selector.keys().size());
 				ret = selector.select();
 			} catch (Exception e) {
 				logger.warn(e.getMessage());
@@ -149,8 +143,7 @@ public class EventManager {
 
 					if (timeCost > attr.timeout) {
 						// 事件处理器
-						attr.evHandle.onIOReady(key.channel(),
-								EventType.EV_TIMEOUT, attr.obj);
+						attr.evHandle.onIOReady(key.channel(), EventType.EV_TIMEOUT, attr.obj);
 						key.cancel();
 						if ((attr.type & EventType.EV_PERSIST) > 0) {
 							// 如果不是EV_PERSIST类型的事件，则删除关联的key
@@ -167,13 +160,13 @@ public class EventManager {
 			while (iter.hasNext()) {
 				SelectionKey key = iter.next();
 				iter.remove();
-				
+
 				if (!key.isValid()) {
 					continue;
 				}
-				
+
 				EventAttr attr = (EventAttr) key.attachment();
-				int evSet = 0; 
+				int evSet = 0;
 				if (key.isReadable()) {
 					evSet = evSet | EventType.EV_READ;
 					logger.debug("event:EV_READ");
@@ -209,8 +202,7 @@ public class EventManager {
 		public Object obj;
 		public SelectableChannel socket;
 
-		public EventAttr(int type, IEventHandle evHandle, long timeout,
-				Object obj, SelectableChannel socket) {
+		public EventAttr(int type, IEventHandle evHandle, long timeout, Object obj, SelectableChannel socket) {
 			super();
 			this.type = type;
 			this.evHandle = evHandle;

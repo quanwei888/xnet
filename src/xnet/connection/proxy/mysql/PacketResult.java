@@ -30,8 +30,9 @@ package xnet.connection.proxy.mysql;
 public class PacketResult {
 	public final static int TYPE_OK = 0x00;
 	public final static int TYPE_ERR = 0xFF;
-	public final static int TYPE_SET = 0x00;
+	public final static int TYPE_DATA = 0x00;
+	public final static int TYPE_EOF = 0xfe;
 
-	public byte type;
+	public int type;
 
 }

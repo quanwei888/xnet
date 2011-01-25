@@ -120,7 +120,7 @@ public class EventManager {
 
 					if (timeCost > attr.timeout) {
 						// 事件处理器
-						attr.evHandle.onIOReady(key.channel(), EventType.EV_TIMEOUT, attr.obj);
+						attr.evHandle.onIOEvent(key.channel(), EventType.EV_TIMEOUT, attr.obj);
 						if ((attr.type & EventType.EV_PERSIST) == 0) {
 							// 如果不是EV_PERSIST类型的事件，则删除关联的key
 							key.cancel();
@@ -153,7 +153,7 @@ public class EventManager {
 				}
 
 				// 事件处理器
-				attr.evHandle.onIOReady(key.channel(), evSet, attr.obj);
+				attr.evHandle.onIOEvent(key.channel(), evSet, attr.obj);
 				if ((attr.type & EventType.EV_PERSIST) == 0) {
 					key.cancel();
 				}

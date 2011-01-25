@@ -19,41 +19,7 @@ public class MysqlIOBuffer extends IOBuffer {
 		return size;
 	}
 
-	public int readUInt8() {
-		return readUInt8(buf.position());
-	}
 
-	public int readUInt8(int index) {
-		return readByte(index) & 0xff;
-	}
-
-	public int readUInt16() {
-		return readUInt16(buf.position());
-	}
-
-	public int readUInt16(int index) {
-		return ((readByte() & 0xff) << 8) | (readByte() & 0xff);
-	}
-
-	public byte readByte() {
-		return readByte(buf.position());
-	}
-
-	public byte readByte(int index) {
-		buf.position(index);
-		return buf.get();
-	}
-
-	public byte[] readBytes(int len) {
-		return readBytes(buf.position(), len);
-	}
-
-	public byte[] readBytes(int index, int len) {
-		byte[] bytes = new byte[len];
-		buf.position(index);
-		buf.get(bytes);
-		return bytes;
-	}
 
 	public int readSize(int index) {
 		buf.position(index);

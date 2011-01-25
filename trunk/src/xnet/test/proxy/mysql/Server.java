@@ -11,6 +11,7 @@ public class Server {
 	public static void main(String[] args) throws IOException {
 		if (args.length != 5) {
 			System.out.println("USAGE:xnet.test.proxy.mysql.Server port server_ip server_port logconfig");
+			System.out.println(args);
 			return;
 		}
 		PropertyConfigurator.configure(args[4]);

@@ -61,7 +61,7 @@ public class Worker implements Runnable {
 	}
 
 	class PipeHandle implements IEventHandle {
-		public void onIOReady(SelectableChannel channel, int type, Object obj) {
+		public void onIOEvent(SelectableChannel channel, int type, Object obj) {
 			SourceChannel sourceChannel = (SourceChannel) channel;
 			try {
 				// ´Ó¹ÜµÀ¶Á1byte

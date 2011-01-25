@@ -14,5 +14,5 @@ public interface IEventHandle {
 	 * @param type	事件类型
 	 * @param obj	附件
 	 */
-	void onIOReady(SelectableChannel select,int type,Object obj);
+	void onIOEvent(SelectableChannel select,int type,Object obj);
 }

@@ -62,11 +62,9 @@ public abstract class ProxyHandle implements IEventHandle {
 		this.worker = worker;
 	}
 
-	public abstract void handleServer(SocketChannel socket, int type)
-			throws Exception;
+	public abstract void handleServer(SocketChannel socket, int type) throws Exception;
 
-	public abstract void handleClient(SocketChannel socket, int type)
-			throws Exception;
+	public abstract void handleClient(SocketChannel socket, int type) throws Exception;
 
 	public void closeClient() {
 		if (cSocket != null && cSocket.isConnected()) {
@@ -89,14 +87,13 @@ public abstract class ProxyHandle implements IEventHandle {
 			}
 		}
 	}
-	
+
 	public void close() {
 		closeClient();
 		closeServer();
 	}
 
-	
-	public void onIOReady(SelectableChannel socket, int type, Object obj) {
+	public void onIOEvent(SelectableChannel socket, int type, Object obj) {
 		try {
 			if (socket == cSocket) {
 				handleClient(cSocket, type);
@@ -119,10 +116,7 @@ public abstract class ProxyHandle implements IEventHandle {
 
 	}
 
-	protected void addEvent(SocketChannel socket, int type, long timeout)
-			throws Exception {
-		if (!worker.getEv().addEvent(socket, type, this, null, timeout)) {
-			throw new Exception();
-		}
+	protected void addEvent(SocketChannel socket, int type, long timeout) throws Exception {
+		worker.getEv().addEvent(socket, type, this, null, timeout);
 	}
 }

@@ -21,9 +21,19 @@ import org.apache.commons.logging.LogFactory;
 public class EventManager {
 	static Log logger = LogFactory.getLog(EventManager.class);
 
+	/**
+	 * Selector，每个EventManager中唯一，线程不安全
+	 */
 	protected Selector selector;
-	protected long timeout;
-	protected Set<EventAttr> eventSet = new HashSet<EventAttr>();
+	/**
+	 * key集合中最小的超时设置
+	 */
+	protected long minTimeOut;
+	/**
+	 * 待注册的key集合
+	 */
+	protected Set<EventAttr> addSet = new HashSet<EventAttr>();
+	protected Set<EventAttr> timeoutSet = new HashSet<EventAttr>();
 
 	/**
 	 * 构造函数
@@ -32,13 +42,13 @@ public class EventManager {
 	 */
 	public EventManager() throws IOException {
 		selector = Selector.open();
-		timeout = 0;
+		minTimeOut = 0;
 	}
 
 	/**
 	 * 注册一个监听事件
 	 * 
-	 * @param channel
+	 * @param socket
 	 *            要监听的channel
 	 * @param type
 	 *            事件类型
@@ -50,60 +60,68 @@ public class EventManager {
 	 *            超时时间
 	 * @throws ClosedChannelException
 	 */
-	public boolean addEvent(SelectableChannel channel, int type, IEventHandle evHandle, Object obj, long timeout) {
-		try {
-			EventAttr attr = new EventManager.EventAttr(type, evHandle, timeout, obj, channel);
-			eventSet.add(attr);
-		} catch (Exception e) {
-			logger.warn(e.getMessage());
-			e.printStackTrace();
-			return false;
+	public void addEvent(SelectableChannel socket, int type, IEventHandle evHandle, Object obj, long timeout) {
+		EventAttr attr = new EventManager.EventAttr(type, evHandle, timeout, obj, socket);
+		addSet.add(attr);
+		if (timeout > 0) {
+			// 加入到超时集合中，用于超时判断
+			timeoutSet.add(attr);
 		}
-		return true;
 	}
 
 	/**
 	 * 删除一个监听事件
 	 * 
-	 * @param channel
+	 * @param socket
 	 */
-	public void delEvent(SelectableChannel channel) {
+	public void delEvent(SelectableChannel socket) {
 		logger.debug("cancel key");
-		SelectionKey key = channel.keyFor(selector);
+		SelectionKey key = socket.keyFor(selector);
 		if (key != null) {
 			key.cancel();
 		}
 	}
 
+	/**
+	 * 更新keys，删除cancel状态的key，重新设置要增加的key
+	 * 
+	 * @throws IOException
+	 */
 	protected void updateKeys() throws IOException {
-		// 首先删除cacel状态的key
-		if (selector.keys().size() > 0) {
-			selector.selectNow();
-		}
-		// 更新key
-		Iterator<EventAttr> it = eventSet.iterator();
+		// 删除cancel状态的key
+		selector.selectNow();
+		// 重新设置要增加的key
+		Iterator<EventAttr> it = addSet.iterator();
 		while (it.hasNext()) {
 			EventAttr attr = it.next();
+			it.remove();
 
-			int type = attr.type;
-			long timeout = attr.timeout;
 			int evSet = 0;
-			if ((type & EventType.EV_READ) > 0) {
+			if ((attr.type & EventType.EV_READ) > 0) {
 				evSet = evSet | SelectionKey.OP_READ;
 			}
-			if ((type & EventType.EV_WRITE) > 0) {
+			if ((attr.type & EventType.EV_WRITE) > 0) {
 				evSet = evSet | SelectionKey.OP_WRITE;
 			}
-			if ((type & EventType.EV_ACCEPT) > 0) {
+			if ((attr.type & EventType.EV_ACCEPT) > 0) {
 				evSet = evSet | SelectionKey.OP_ACCEPT;
 			}
-			if (timeout > 0 && timeout < this.timeout) {
+			if (attr.timeout > 0 && attr.timeout < this.minTimeOut) {
 				// 取最小的超时设置
-				this.timeout = timeout;
+				this.minTimeOut = attr.timeout;
 			}
-			attr.socket.register(selector, evSet, attr);
+			try {
+				attr.socket.register(selector, evSet, attr);
+			} catch (Exception e) {
+				logger.fatal(e.getStackTrace());
+				attr.socket.keyFor(selector).cancel();
+				try {
+					attr.socket.close();
+				} catch (IOException e1) {
+					logger.fatal(e.getStackTrace());
+				}
+			}
 		}
-		eventSet.clear();
 	}
 
 	/**
@@ -113,79 +131,65 @@ public class EventManager {
 	 */
 	public void loop() {
 		while (true) {
-			long stime = System.currentTimeMillis();
-			int ret;
 			try {
 				updateKeys();
-				ret = selector.select();
-			} catch (Exception e) {
-				logger.warn(e.getMessage());
-				continue;
-			}
-
-			logger.debug("select return:" + ret);
-			if (selector.keys().size() == 0) {
-				// 没有事件被监听则结束循环
-				break;
-			}
-
-			if (ret == 0) {
-				// 超时处理
+				if (selector.keys().size() == 0) {
+					// 没有事件被监听则结束循环
+					break;
+				}
+				long stime = System.currentTimeMillis();
+				int ret = selector.select(minTimeOut);
 				long timeCost = System.currentTimeMillis() - stime;
-				Set<SelectionKey> keys = selector.keys();
-				Iterator<SelectionKey> iter = keys.iterator();
-				while (iter.hasNext()) {
-					SelectionKey key = iter.next();
-					EventAttr attr = (EventAttr) key.attachment();
-					if (attr.timeout == 0) {
-						continue;
-					}
+				logger.debug("select return:" + ret);
 
-					if (timeCost > attr.timeout) {
-						// 事件处理器
-						attr.evHandle.onIOReady(key.channel(), EventType.EV_TIMEOUT, attr.obj);
+				// IO事件处理
+				Iterator<SelectionKey> eventIter = selector.selectedKeys().iterator();
+				while (eventIter.hasNext()) {
+					SelectionKey key = eventIter.next();
+					eventIter.remove();
+					if (!key.isValid()) {
 						key.cancel();
-						if ((attr.type & EventType.EV_PERSIST) > 0) {
-							// 如果不是EV_PERSIST类型的事件，则删除关联的key
-							eventSet.add(attr);
-						}
+						continue;
+					}					 
+					
+					EventAttr attr = (EventAttr) key.attachment();
+					timeoutSet.remove(attr);// 从超时key集合中移除
+					int evSet = 0;
+					if (key.isReadable()) {
+						evSet = evSet | EventType.EV_READ;
+						logger.debug("event:EV_READ");
+					}
+					if (key.isWritable()) {
+						evSet = evSet | EventType.EV_WRITE;
+						logger.debug("event:EV_WRITE");
+					}
+					if (key.isAcceptable()) {
+						evSet = evSet | EventType.EV_ACCEPT;
+						logger.debug("event:EV_ACCEPT");
+					}
+					if ((attr.type & EventType.EV_PERSIST) > 0) {
+						addSet.add(attr);
+					}
+					key.cancel();
+					// 回调函数
+					attr.evHandle.onIOEvent(key.channel(), evSet, attr.obj);
+				}
+
+				// 超时事件处理
+				Iterator<EventAttr> timeEventIter = timeoutSet.iterator();
+				while (timeEventIter.hasNext()) {
+					EventAttr attr = timeEventIter.next();
+					if (timeCost >= attr.timeout) {
+						timeEventIter.remove();
+						attr.evHandle.onIOEvent(attr.socket, EventType.EV_TIMEOUT, attr.obj);
+						//取消该事件
+						attr.socket.keyFor(selector).cancel();
 					}
 				}
-				continue;
+			} catch (IOException e) {
+				logger.warn(e.getStackTrace());
 			}
 
-			// 不是超时
-			Set<SelectionKey> keys = selector.selectedKeys();
-			Iterator<SelectionKey> iter = keys.iterator();
-			while (iter.hasNext()) {
-				SelectionKey key = iter.next();
-				iter.remove();
-
-				if (!key.isValid()) {
-					continue;
-				}
-
-				EventAttr attr = (EventAttr) key.attachment();
-				int evSet = 0;
-				if (key.isReadable()) {
-					evSet = evSet | EventType.EV_READ;
-					logger.debug("event:EV_READ");
-				}
-				if (key.isWritable()) {
-					evSet = evSet | EventType.EV_WRITE;
-					logger.debug("event:EV_WRITE");
-				}
-				if (key.isAcceptable()) {
-					evSet = evSet | EventType.EV_ACCEPT;
-					logger.debug("event:EV_ACCEPT");
-				}
-				key.cancel();
-				if ((attr.type & EventType.EV_PERSIST) > 0) {
-					eventSet.add(attr);
-				}
-				// 事件处理器
-				attr.evHandle.onIOReady(key.channel(), evSet, attr.obj);
-			}
 		}
 	}
 

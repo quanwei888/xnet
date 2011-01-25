@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import org.apache.log4j.PropertyConfigurator;
 
-import xnet.connection.proxy.mysql.MysqlProxyFactory;
-import xnet.connection.proxy.mysql.MysqlProxyHandle;
+import xnet.mysqlproxy.MysqlProxyFactory;
+import xnet.mysqlproxy.MysqlProxyHandle;
 
 public class Server {
 	public static void main(String[] args) throws IOException {

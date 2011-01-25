@@ -169,7 +169,7 @@ public class Server {
 	 * 
 	 */
 	class ServerHandle implements IEventHandle {
-		public void onIOReady(SelectableChannel select, int type, Object obj) {
+		public void onIOEvent(SelectableChannel select, int type, Object obj) {
 			ServerSocketChannel serverSocketChannel = (ServerSocketChannel) select;
 			SocketChannel socketChannel = null;
 			Server server = (Server) obj;

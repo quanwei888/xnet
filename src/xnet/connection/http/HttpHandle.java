@@ -10,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 
 import xnet.core.*;
 import xnet.core.connection.ISimpleHandle;
+import xnet.core.io.IOBuffer;
 
 public class HttpHandle implements ISimpleHandle {
 	static Log logger = LogFactory.getLog(HttpHandle.class);

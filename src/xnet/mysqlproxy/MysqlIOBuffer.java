@@ -2,7 +2,7 @@ package xnet.mysqlproxy;
 
 import java.io.UnsupportedEncodingException;
 
-import xnet.core.IOBuffer;
+import xnet.core.io.IOBuffer;
 
 public class MysqlIOBuffer extends IOBuffer {
 	public int getBodyLen() {

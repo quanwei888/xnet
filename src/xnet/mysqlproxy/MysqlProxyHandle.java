@@ -7,9 +7,11 @@ import java.nio.channels.SocketChannel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.connection.proxy.ProxyHandle;
 import xnet.core.*;
+import xnet.core.connection.ProxyHandle;
 import xnet.core.event.*;
+import xnet.core.io.IOState;
+import xnet.core.io.IOUtil;
 
 public class MysqlProxyHandle extends ProxyHandle {
 	public static String host = "127.0.0.1";

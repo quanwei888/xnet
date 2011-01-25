@@ -5,11 +5,9 @@ import java.nio.channels.SelectableChannel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.core.Connection;
-import xnet.core.ConnectionPool;
-import xnet.core.IOBuffer;
-import xnet.core.IOState;
 import xnet.core.event.*;
+import xnet.core.io.IOBuffer;
+import xnet.core.io.IOState;
 
 /**
  * 简单的connection 实现了request->response的过程

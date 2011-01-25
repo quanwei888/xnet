@@ -1,7 +1,9 @@
 package xnet.mysqlproxy;
 
-import xnet.connection.proxy.ProxyConnection;
 import xnet.core.*; 
+import xnet.core.connection.IConnection;
+import xnet.core.connection.IConnectionFactory;
+import xnet.core.connection.ProxyConnection;
 
 public class MysqlProxyFactory implements IConnectionFactory {
 	public MysqlProxyFactory() {

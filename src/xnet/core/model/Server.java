@@ -11,82 +11,19 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import xnet.core.connection.ConnectionPool;
-import xnet.core.connection.IConnection;
-import xnet.core.connection.IConnectionFactory;
+import xnet.core.connection.IConnection; 
 import xnet.core.event.*;
 import xnet.core.io.IOBuffer;
 
 public class Server {
 	static Log logger = LogFactory.getLog(Server.class);
 
-	protected ServerSocketChannel socket = null;
-
-	protected EventManager ev = null;
+	ServerSocketChannel socket;
+	EventManager em = null;
 	/**
 	 * 端口号
 	 */
 	protected int port = 8123;
-	/**
-	 * 读超时
-	 */
-	protected long readTimeout = 0;
-
-	public int getPort() {
-		return port;
-	}
-
-	public long getReadTimeout() {
-		return readTimeout;
-	}
-
-	public long getWriteTimeout() {
-		return writeTimeout;
-	}
-
-	public int getThreadNum() {
-		return threadNum;
-	}
-
-	/**
-	 * 写超时
-	 */
-	protected long writeTimeout = 0;
-	/**
-	 * 工作线程数
-	 */
-	protected int threadNum = 8;
-	/**
-	 * 工作线程
-	 */
-	protected Worker[] workers;
-	/**
-	 * 上一次工作线程ID
-	 */
-	protected int lastThread = -1;
-	/**
-	 * 长连接
-	 */
-	protected boolean keepalive = false;
-
-	protected IOBuffer pipeBuf = new IOBuffer(1);
-
-	/**
-	 * 长连接
-	 * 
-	 * @return
-	 */
-	public boolean isKeepalive() {
-		return keepalive;
-	}
-
-	/**
-	 * 设置长连接
-	 * 
-	 * @param keepalive
-	 */
-	public void setKeepalive(boolean keepalive) {
-		this.keepalive = keepalive;
-	}
 
 	/**
 	 * 设置端口号
@@ -98,22 +35,9 @@ public class Server {
 	}
 
 	/**
-	 * 设置读超时
-	 * 
-	 * @param readTimeout
+	 * 工作线程数
 	 */
-	public void setReadTimeout(long readTimeout) {
-		this.readTimeout = readTimeout;
-	}
-
-	/**
-	 * 设置写超时
-	 * 
-	 * @param writeTimeout
-	 */
-	public void setWriteTimeout(long writeTimeout) {
-		this.writeTimeout = writeTimeout;
-	}
+	int threadNum = 8;
 
 	/**
 	 * 设置工作线程数
@@ -125,13 +49,14 @@ public class Server {
 	}
 
 	/**
-	 * 设置connection类型
-	 * 
-	 * @param connCls
+	 * 工作线程
 	 */
-	public void setConnectionFactory(IConnectionFactory connFactory) {
-		ConnectionPool.connFactory = connFactory;
-	}
+	Worker[] workers;
+	/**
+	 * 上一次工作线程ID
+	 */
+	int lastThread = -1;
+	IOBuffer pipeBuf = new IOBuffer(1);
 
 	/**
 	 * 
@@ -144,9 +69,9 @@ public class Server {
 		socket.socket().bind(new InetSocketAddress(port));
 
 		initThread();
-		ev = new EventManager();
-		ev.addEvent(socket, EventType.EV_ACCEPT | EventType.EV_PERSIST, new Server.ServerHandle(), this, 0);
-		ev.loop();
+		em = new EventManager();
+		em.addEvent(socket, EventType.EV_ACCEPT | EventType.EV_PERSIST, new Server.ServerHandle(), this, 0);
+		em.loop();
 	}
 
 	/**
@@ -160,11 +85,11 @@ public class Server {
 		for (int i = 0; i < workers.length; i++) {
 			workers[i] = new Worker();
 			Pipe pipe = Pipe.open();
-			workers[i].sourceChannel = pipe.source();
-			workers[i].sinkChannel = pipe.sink();
+			workers[i].sourceSocket = pipe.source();
+			workers[i].sinkSocket = pipe.sink();
 			workers[i].server = this;
-			workers[i].sourceChannel.configureBlocking(false);
-			workers[i].sinkChannel.configureBlocking(false);
+			workers[i].sourceSocket.configureBlocking(false);
+			workers[i].sinkSocket.configureBlocking(false);
 			new Thread(workers[i]).start();
 		}
 	}
@@ -195,7 +120,7 @@ public class Server {
 
 				lastThread++;
 				pipeBuf.clear();
-				workers[lastThread % server.threadNum].sinkChannel.write(pipeBuf.getBuf());
+				workers[lastThread % server.threadNum].sinkSocket.write(pipeBuf.getBuf());
 			} catch (Exception e) {
 				logger.warn(e.getStackTrace());
 				try {

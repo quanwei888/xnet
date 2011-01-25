@@ -4,64 +4,65 @@ import java.io.IOException;
 import java.nio.channels.Pipe.SinkChannel;
 import java.nio.channels.Pipe.SourceChannel;
 import java.nio.channels.SelectableChannel;
+import java.nio.channels.SocketChannel;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory; 
- 
+import org.apache.commons.logging.LogFactory;
+
 import xnet.core.connection.ConnectionPool;
 import xnet.core.connection.IConnection;
-import xnet.core.event.*; 
+import xnet.core.event.*;
 import xnet.core.io.IOBuffer;
-
 
 public class Worker implements Runnable {
 	static Log logger = LogFactory.getLog(Worker.class);
-	
-	/**
-	 * 事件管理器
-	 */
-	protected EventManager ev = null;
+	EventManager em = null;
 	/**
 	 * read pipe channel
 	 */
-	protected SourceChannel sourceChannel = null;
+	SourceChannel sourceSocket = null;
 	/**
 	 * write pipe channel
 	 */
-	protected SinkChannel sinkChannel = null;
+	SinkChannel sinkSocket = null;
 	/**
 	 * 事件处理器
 	 */
-	protected IEventHandle eventHandle;
+	IEventHandle evHandle;
 	/**
 	 * 当前服务
 	 */
-	protected Server server;
+	Server server;
 
-	protected IOBuffer pipeBuf = new IOBuffer(1);
-	
-	public EventManager getEv() {
-		return ev;
-	}
+	IOBuffer pipeBuf = new IOBuffer(1);
 
 	public SinkChannel getSinkChannel() {
-		return sinkChannel;
+		return sinkSocket;
 	}
 
 	public Server getServer() {
 		return server;
 	}
-	
+
+	/**
+	 * 线程主方法
+	 */
 	public void run() {
 		try {
-			ev = new EventManager();
-			ev.addEvent(sourceChannel, EventType.EV_READ | EventType.EV_PERSIST, new Worker.PipeHandle(), this, 0);
-			ev.loop();
+			em = new EventManager();
+			em.addEvent(sourceSocket, EventType.EV_READ | EventType.EV_PERSIST, new Worker.PipeHandle(), this, 0);
+			em.loop();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.warn(e.getStackTrace());
 		}
 	}
 
+	/**
+	 * 处理管道数据，表示新连接建立
+	 * 
+	 * @author quanwei
+	 * 
+	 */
 	class PipeHandle implements IEventHandle {
 		public void onIOEvent(SelectableChannel channel, int type, Object obj) {
 			SourceChannel sourceChannel = (SourceChannel) channel;
@@ -88,5 +89,26 @@ public class Worker implements Runnable {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * 在work线程中注册io事件
+	 * 
+	 * @param socket
+	 * @param type
+	 * @param proxyHandle
+	 * @param timeout
+	 */
+	public void addEvent(SocketChannel socket, int type, IEventHandle proxyHandle, long timeout) {
+		em.addEvent(socket, type, proxyHandle, proxyHandle, timeout);
+	}
+
+	/**
+	 * 在work线程中删除io事件
+	 * 
+	 * @param socket
+	 */
+	public void delEvent(SocketChannel socket) {
+		em.delEvent(socket);
 	}
 }

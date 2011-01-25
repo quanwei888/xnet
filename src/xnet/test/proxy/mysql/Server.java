@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import org.apache.log4j.PropertyConfigurator;
 
+import xnet.core.connection.ConnectionPool;
+import xnet.http.HttpFactory;
 import xnet.mysqlproxy.MysqlProxyFactory;
 import xnet.mysqlproxy.MysqlProxyHandle;
 
@@ -14,13 +16,14 @@ public class Server {
 			System.out.println(args.length);
 			return;
 		}
+		ConnectionPool.setConnFactory(new MysqlProxyFactory());
 		PropertyConfigurator.configure(args[3]);
 		xnet.core.model.Server server = new xnet.core.model.Server();
 		server.setPort(Integer.parseInt(args[0]));
 		MysqlProxyHandle.host = args[1];
 		MysqlProxyHandle.port = Integer.parseInt(args[2]);
 		server.setThreadNum(8);
-		server.setConnectionFactory(new MysqlProxyFactory());
+		 
 		server.run();
 	}
 }

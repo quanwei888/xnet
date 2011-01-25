@@ -68,7 +68,7 @@ public abstract class ProxyHandle implements IEventHandle {
 	public void closeClient() {
 		if (cSocket != null && cSocket.isConnected()) {
 			try {
-				worker.getEv().delEvent(cSocket);
+				worker.delEvent(cSocket);
 				cSocket.close();
 			} catch (IOException e) {
 				logger.warn(e.getMessage());
@@ -79,7 +79,7 @@ public abstract class ProxyHandle implements IEventHandle {
 	public void closeServer() {
 		if (sSocket != null && sSocket.isConnected()) {
 			try {
-				worker.getEv().delEvent(sSocket);
+				worker.delEvent(sSocket);
 				sSocket.close();
 			} catch (IOException e) {
 				logger.warn(e.getMessage());
@@ -113,9 +113,5 @@ public abstract class ProxyHandle implements IEventHandle {
 			close();
 		}
 
-	}
-
-	protected void addEvent(SocketChannel socket, int type, long timeout) throws Exception {
-		worker.getEv().addEvent(socket, type, this, null, timeout);
-	}
+	} 
 }

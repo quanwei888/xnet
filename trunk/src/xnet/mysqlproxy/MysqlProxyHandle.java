@@ -1,6 +1,5 @@
 package xnet.mysqlproxy;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 
@@ -18,7 +17,7 @@ public class MysqlProxyHandle extends ProxyHandle {
 	public static int port = 3306;
 
 	protected static Log logger = LogFactory.getLog(MysqlProxyHandle.class);
-	public static int BUFFER_SIZE = 1024;
+	public static int BUFFER_SIZE = 2048;
 
 	MysqlStateBase state;
 	HandleState handleState;
@@ -166,18 +165,20 @@ public class MysqlProxyHandle extends ProxyHandle {
 				if (nextState == null) {
 					// packet未准备好，需要继续读
 					state.getRbuf().position(state.getRbuf().limit());
-					worker.addEvent(socket, EventType.EV_READ, this, rtimeout);
+					worker.addEvent(state.getSocket(), EventType.EV_READ, this, rtimeout);
 					stop = true;
 					break;
 				} else {
 					// 下一状态必须为写
 					state = nextState;
 					state.getWbuf().position(0);
+					if (state.isRead()) {
+						throw new Exception();
+					}
 				}
 			} else {
 				if (ioState == IOState.GOON) {
-					// IO继续,需要继续写
-					worker.addEvent(socket, EventType.EV_WRITE, this, wtimeout);
+					worker.addEvent(socket, EventType.EV_WRITE, this, rtimeout);
 					stop = true;
 					break;
 				}
@@ -193,8 +194,10 @@ public class MysqlProxyHandle extends ProxyHandle {
 				state.getRbuf().compact();
 				state.getRbuf().position(newPos);
 				state.getRbuf().limit(newPos);
-				
-				worker.addEvent(socket, EventType.EV_READ, this, rtimeout);
+				if (!state.isRead()) {
+					throw new Exception();
+				}
+				worker.addEvent(state.getSocket(), EventType.EV_READ, this, rtimeout);
 				stop = true;
 				break;
 			}

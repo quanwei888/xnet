@@ -61,7 +61,7 @@ public class EventManager {
 	 * @throws ClosedChannelException
 	 */
 	public void addEvent(SelectableChannel socket, int type, IEventHandle evHandle, Object obj, long timeout) {
-		logger.debug("add event:" + socket);
+		logger.debug("add event:" + socket + type);
 		EventAttr attr = new EventManager.EventAttr(type, evHandle, timeout, obj, socket);
 		addSet.add(attr);
 		if (timeout > 0) {

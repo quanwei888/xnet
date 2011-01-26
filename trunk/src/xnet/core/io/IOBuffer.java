@@ -75,7 +75,9 @@ public class IOBuffer {
 		buf.clear();
 	}
 
-
+	public void compact() {
+		buf.compact();
+	}
 
 	public int readUInt8() {
 		return readUInt8(buf.position());
@@ -112,7 +114,6 @@ public class IOBuffer {
 		buf.get(bytes);
 		return bytes;
 	}
-	
 
 	public String readString(int len) {
 		return readString(buf.position(), len);
@@ -134,7 +135,7 @@ public class IOBuffer {
 	public String toString() {
 		return buf.toString();
 	}
-	 
+
 	public void putString(String str) throws UnsupportedEncodingException {
 		byte[] bytes = str.getBytes(charset);
 		limit(buf.position() + bytes.length);

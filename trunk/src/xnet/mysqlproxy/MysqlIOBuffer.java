@@ -17,8 +17,6 @@ public class MysqlIOBuffer extends IOBuffer {
 		return size;
 	}
 
-
-
 	public int readSize(int index) {
 		buf.position(index);
 		byte[] bytes = readBytes(3);
@@ -47,7 +45,13 @@ public class MysqlIOBuffer extends IOBuffer {
 		}
 		return -1;
 	}
- 
+
+	public PacketResult getResultPacket() {
+		int pos = buf.position();
+		PacketResult result = readResultPacket(buf.position());
+		buf.position(pos);
+		return result;
+	}
 
 	public PacketResult readResultPacket() {
 		return readResultPacket(buf.position());
@@ -87,6 +91,64 @@ public class MysqlIOBuffer extends IOBuffer {
 			result.extra = remain > 0 ? readLCB() : 0;
 			return result;
 		}
+	}
+
+	public boolean nextPacket() {
+		return nextPacket(buf.position());
+	}
+
+	public boolean nextPacket(int index) {
+		buf.position(index);
+		int size = readSize(index);
+		if (index + 4 + size <= buf.limit()) {
+			buf.position(index + 4 + size);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public byte[] readNextPacket() throws Exception {
+		return readNextPacket(buf.position());
+	}
+
+	public byte[] readNextPacket(int index) throws Exception {
+		buf.position(index);
+		int size = readSize(index);
+		if (index + 4 + size <= buf.limit()) {
+			buf.position(index);
+			return readBytes(4 + size);
+		}
+		throw new Exception("index overflow");
+	}
+
+	public boolean hasNextPacket() {
+		return hasNextPacket(buf.position());
+	}
+
+	public boolean hasNextPacket(int index) {
+		if (index + 4 > buf.limit()) {
+			return false;
+		}
+		buf.position(index);
+		int size = readSize(index);
+		buf.position(index);
+		if (index + 4 + size <= buf.limit()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public MysqlIOBuffer writeBytes(byte[] bytes) {
+		return writeBytes(buf.position(), bytes);
+	}
+
+	public MysqlIOBuffer writeBytes(int index, byte[] bytes) {
+		buf.position(index);
+		limit(index + bytes.length);
+		buf.put(bytes);
+		return this;
 	}
 
 	public PacketCommond readPacketCommond() {

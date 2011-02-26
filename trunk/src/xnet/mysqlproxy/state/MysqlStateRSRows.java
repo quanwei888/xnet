@@ -2,8 +2,7 @@ package xnet.mysqlproxy.state;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import xnet.mysqlproxy.MysqlIOBuffer;
+ 
 import xnet.mysqlproxy.MysqlProxyHandle;
 import xnet.mysqlproxy.PacketResult;
 import xnet.mysqlproxy.PacketResultEof;

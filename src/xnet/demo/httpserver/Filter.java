@@ -1,4 +1,4 @@
-package xnet.httpdemo;
+package xnet.demo.httpserver;
 
 import xnet.http.HttpAttr;
 import xnet.http.Request;

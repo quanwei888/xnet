@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
  * 
  */
 public class IOBuffer {
-	ByteBuffer buf; 
+	ByteBuffer buf;
 
 	public ByteBuffer getBuf() {
 		return buf;
@@ -89,6 +89,10 @@ public class IOBuffer {
 		return readByte(buf.position());
 	}
 
+	public byte[] readBytes() {
+		return readBytes(buf.limit());
+	}
+
 	public byte[] readBytes(int len) {
 		return readBytes(buf.position(), len);
 	}
@@ -112,6 +116,10 @@ public class IOBuffer {
 		return getByte(buf.position());
 	}
 
+	public byte[] getBytes() {
+		return getBytes(buf.limit());
+	}
+
 	public byte[] getBytes(int len) {
 		return getBytes(buf.position(), len);
 	}
@@ -123,7 +131,7 @@ public class IOBuffer {
 		buf.get(bytes);
 		buf.position(pos);
 		return bytes;
-	} 
+	}
 
 	public IOBuffer writeBytes(byte[] bytes) {
 		return writeBytes(buf.position(), bytes);

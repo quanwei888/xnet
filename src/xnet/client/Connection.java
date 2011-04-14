@@ -82,8 +82,6 @@ public class Connection {
 	 * @return
 	 */
 	SocketChannel connect(InetSocketAddress server) {
-
-		System.out.println(server);
 		SocketChannel socket = null;
 		try {
 			Selector selector = Selector.open();

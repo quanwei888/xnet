@@ -106,9 +106,10 @@ public class Worker implements Runnable {
 		long timeout = 0;
 		Iterator<Session> sessionIter = timeoutSessionSet.iterator();
 		if (sessionIter.hasNext()) {
-			timeout = sessionIter.next().nextTimeout
-					- System.currentTimeMillis();
+			timeout = sessionIter.next().nextTimeout - System.currentTimeMillis();
+			timeout = Math.max(timeout, 1);
 		}
+		logger.debug("time out:" + timeout);
 		selector.select(timeout);
 		long now = System.currentTimeMillis();
 
@@ -164,8 +165,7 @@ public class Worker implements Runnable {
 			session.writeBuf.limit(0);
 			session.state = Session.STATE_READ;
 			if (session.config.rTimeout > 0) {
-				session.nextTimeout = System.currentTimeMillis()
-						+ session.config.rTimeout;
+				session.nextTimeout = System.currentTimeMillis() + session.config.rTimeout;
 			}
 			session.open();
 			session.socket.register(selector, SelectionKey.OP_READ, session);
@@ -193,8 +193,7 @@ public class Worker implements Runnable {
 			keyIter.remove();
 
 			Session session = (Session) key.attachment();
-			session.event = session.state == Session.EVENT_READ ? Session.EVENT_READ
-					: Session.EVENT_WRITE;
+			session.event = session.state == Session.EVENT_READ ? Session.EVENT_READ : Session.EVENT_WRITE;
 
 			eventSessionList.add(session);
 			timeoutSessionSet.remove(session);
@@ -225,9 +224,11 @@ public class Worker implements Runnable {
 		Iterator<Session> eventIter = eventSessionList.iterator();
 		while (eventIter.hasNext()) {
 			Session session = eventIter.next();
+			logger.debug(session.event);
 			try {
 				if (session.event == Session.EVENT_TIMEOUT) {
 					timeoutEvent(session);
+					close(session);
 				} else {
 					if (session.state == Session.STATE_READ) {
 						readEvent(session);
@@ -238,9 +239,9 @@ public class Worker implements Runnable {
 							if (session.config.keepalive) {
 								// 长连接
 								session.socket.register(selector, SelectionKey.OP_READ, session);
+								session.state = Session.STATE_READ;
 								if (session.config.rTimeout > 0) {
-									session.nextTimeout = System.currentTimeMillis()
-											+ session.config.rTimeout * 1000;
+									session.nextTimeout = System.currentTimeMillis() + session.config.rTimeout;
 								}
 								addTimeSession(session);
 							} else {
@@ -289,13 +290,18 @@ public class Worker implements Runnable {
 				throw new Exception("invalid remain");
 			}
 			if (remain == 0) {
+				session.readBuf.limit(session.readBuf.position());
+				session.readBuf.position(0);
+				session.writeBuf.position(0);
+				session.writeBuf.limit(0);
 				session.handle(session.readBuf, session.writeBuf);
+				session.readBuf.position(0);
+				session.readBuf.limit(0);
 				session.state = Session.STATE_WRITE;
 				session.writeBuf.position(0);
 				session.socket.register(selector, SelectionKey.OP_WRITE, session);
 				if (session.config.wTimeout > 0) {
-					session.nextTimeout = System.currentTimeMillis()
-							+ session.config.wTimeout * 1000;
+					session.nextTimeout = System.currentTimeMillis() + session.config.wTimeout * 1000;
 				}
 				addTimeSession(session);
 				return;

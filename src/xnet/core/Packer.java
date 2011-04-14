@@ -1,5 +1,10 @@
 package xnet.core;
 
+/**
+ * java版二进制打包类
+ * @author quanwei
+ *
+ */
 public class Packer {
 	boolean bigEndian = true;
 

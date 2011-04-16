@@ -34,7 +34,7 @@ public class Connection {
 	/**
 	 * 写超时（ms）
 	 */
-	public int wTimeout = 0; 
+	public int wTimeout = 0;
 
 	/**
 	 * IP
@@ -83,8 +83,9 @@ public class Connection {
 	 */
 	SocketChannel connect(InetSocketAddress server) {
 		SocketChannel socket = null;
+		Selector selector = null;
 		try {
-			Selector selector = Selector.open();
+			selector = Selector.open();
 			socket = SocketChannel.open();
 			socket.configureBlocking(false);
 			socket.connect(server);
@@ -148,9 +149,9 @@ public class Connection {
 	 * @throws Exception
 	 */
 	public void write(IOBuffer writeBuf) throws Exception {
-
+		Selector selector = null;
 		try {
-			Selector selector = Selector.open();
+			selector = Selector.open();
 			socket.register(selector, SelectionKey.OP_WRITE);
 
 			int remainTime = wTimeout;
@@ -217,8 +218,9 @@ public class Connection {
 	 * @throws Exception
 	 */
 	public void read(IOBuffer readBuf) throws Exception {
+		Selector selector = null;
 		try {
-			Selector selector = Selector.open();
+			selector = Selector.open();
 			socket.register(selector, SelectionKey.OP_READ);
 
 			int remainTime = rTimeout;

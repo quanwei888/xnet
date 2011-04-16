@@ -1,4 +1,4 @@
-package xnet.client;
+package xnet.core.client;
 
 import java.util.Iterator;
 import java.util.List;
@@ -12,8 +12,8 @@ import java.nio.channels.SocketChannel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.core.IOBuffer;
-import xnet.core.NetIo;
+import xnet.core.util.IOBuffer;
+import xnet.core.util.NetIo;
 
 /**
  * client连接对象

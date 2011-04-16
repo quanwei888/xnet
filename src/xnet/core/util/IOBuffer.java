@@ -1,4 +1,4 @@
-package xnet.core;
+package xnet.core.util;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;

@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
-import xnet.client.Connection;
+import xnet.core.client.Connection;
 
 public class EchoAb {
 	public static void main(String[] args) throws Exception {

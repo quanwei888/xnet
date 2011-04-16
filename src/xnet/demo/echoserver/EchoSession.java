@@ -1,7 +1,7 @@
 package xnet.demo.echoserver;
 
-import xnet.core.IOBuffer;
-import xnet.server.Session;
+import xnet.core.server.Session;
+import xnet.core.util.IOBuffer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

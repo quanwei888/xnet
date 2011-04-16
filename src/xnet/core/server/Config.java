@@ -1,4 +1,4 @@
-package xnet.server;
+package xnet.core.server;
 
 /**
  * 全局配置

@@ -1,4 +1,4 @@
-package xnet.server;
+package xnet.core.server;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.core.IOBuffer;
+import xnet.core.util.IOBuffer;
 
 /**
  * server，服务实例

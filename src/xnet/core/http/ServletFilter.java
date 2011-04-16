@@ -1,4 +1,4 @@
-package xnet.http;
+package xnet.core.http;
 
 public interface ServletFilter {
 	/**

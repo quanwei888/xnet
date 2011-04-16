@@ -1,6 +1,6 @@
 package xnet.test;
 
-import xnet.core.Packer;
+import xnet.core.util.Packer;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 

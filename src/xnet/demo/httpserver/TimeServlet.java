@@ -1,8 +1,8 @@
 package xnet.demo.httpserver;
 
-import xnet.http.Request;
-import xnet.http.Response;
-import xnet.http.Servlet;
+import xnet.core.http.Request;
+import xnet.core.http.Response;
+import xnet.core.http.Servlet;
 
 public class TimeServlet implements Servlet {
 

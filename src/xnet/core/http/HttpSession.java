@@ -1,7 +1,7 @@
-package xnet.http;
+package xnet.core.http;
 
-import xnet.core.IOBuffer;
-import xnet.server.Session;
+import xnet.core.server.Session;
+import xnet.core.util.IOBuffer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

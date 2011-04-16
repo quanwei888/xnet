@@ -1,4 +1,4 @@
-package xnet.core;
+package xnet.core.util;
 
 /**
  * java版二进制打包类

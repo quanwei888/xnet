@@ -1,4 +1,4 @@
-package xnet.client;
+package xnet.core.client;
 
 import java.net.InetSocketAddress;
 

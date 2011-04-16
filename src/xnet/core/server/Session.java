@@ -1,11 +1,11 @@
-package xnet.server;
+package xnet.core.server;
 
 import java.nio.channels.SocketChannel;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.core.IOBuffer;
+import xnet.core.util.IOBuffer;
 
 /**
  * session，表示一次会话

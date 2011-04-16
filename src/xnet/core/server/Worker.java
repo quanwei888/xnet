@@ -1,4 +1,4 @@
-package xnet.server;
+package xnet.core.server;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import xnet.core.NetIo;
+import xnet.core.util.NetIo;
 
 /**
  * 工作线程

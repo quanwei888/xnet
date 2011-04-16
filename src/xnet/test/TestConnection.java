@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.ArrayList;
 
-import xnet.client.Connection;
+import xnet.core.client.Connection;
 
 import junit.framework.TestCase;
 

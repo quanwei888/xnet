@@ -1,9 +1,9 @@
 package xnet.demo.httpserver;
 
-import xnet.http.HttpAttr;
-import xnet.http.Request;
-import xnet.http.Servlet;
-import xnet.http.ServletFilter;
+import xnet.core.http.HttpAttr;
+import xnet.core.http.Request;
+import xnet.core.http.Servlet;
+import xnet.core.http.ServletFilter;
 
 public class Filter implements ServletFilter {
 

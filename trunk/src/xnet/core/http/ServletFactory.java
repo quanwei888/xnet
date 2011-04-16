@@ -1,4 +1,4 @@
-package xnet.http;
+package xnet.core.http;
 
 public class ServletFactory {
 	public static ServletFilter filter = null;

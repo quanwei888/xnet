@@ -1,4 +1,4 @@
-package xnet.http;
+package xnet.core.http;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;

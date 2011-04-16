@@ -47,7 +47,7 @@ public class EchoAb {
 					try {
 						String header = "hello world\n";
 						byte[] stream = header.getBytes("UTF-8");
-						conn.write(stream);
+						conn.write(stream); 
 						conn.read(header.length());
 					} catch (Exception e) {
 						e.printStackTrace();

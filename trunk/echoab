@@ -1,3 +1,3 @@
 #!/bin/sh
-/home/quanwei/local/jdk1.6/bin/java -server  -Xmx4g -Xms4g -Xmn2g -cp ./lib/commons-logging-1.1.1.jar:./lib/log4j-1.2.16.jar:./dest/xnet.jar  xnet.demo.echoclient.EchoAb
+/home/quanwei/local/jdk1.6/bin/java -cp ./lib/commons-logging-1.1.1.jar:./lib/log4j-1.2.16.jar:./dest/xnet.jar  xnet.demo.echoclient.EchoAb
 

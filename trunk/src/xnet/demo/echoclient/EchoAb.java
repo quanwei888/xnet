@@ -11,10 +11,11 @@ public class EchoAb {
 	public static void main(String[] args) throws Exception {
 		int threadNum = 1;
 		int requests = 200;
-		if (args.length == 2) {
-			threadNum = Integer.parseInt(args[0]);
-			requests = Integer.parseInt(args[1]);
+		if (args.length == 3) {
+			threadNum = Integer.parseInt(args[1]);
+			requests = Integer.parseInt(args[2]);
 		}
+		System.out.println(threadNum + ":" + requests);
 		long stime = System.currentTimeMillis();
 		Thread[] clients = new Thread[threadNum];
 		for (int i = 0; i < threadNum; i++) {

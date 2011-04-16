@@ -5,16 +5,20 @@ import org.apache.log4j.PropertyConfigurator;
 import xnet.core.http.HttpSession;
 import xnet.core.http.ServletFactory;
 import xnet.core.http.ServletFilter;
-import xnet.core.server.*;
+import xnet.core.server.*; 
 
 public class HttpServer {
 	public static void main(String[] args) throws Exception {
+		if (args.length != 2) {
+			System.out.println(HttpServer.class + " PORT THREAD_NUM\n");
+			return;
+		}
+
 		Config config = new Config();
 		config.session = HttpSession.class;
 		PropertyConfigurator.configure("./conf/log4j.properties");
-
-		config.threadNum = Runtime.getRuntime().availableProcessors() + 1;
-		config.port = 8480;
+		config.threadNum = Integer.parseInt(args[1]);
+		config.port = Short.parseShort(args[0]);
 		config.rTimeout = 1000;
 		config.wTimeout = 1000;
 		config.ip = "0.0.0.0";

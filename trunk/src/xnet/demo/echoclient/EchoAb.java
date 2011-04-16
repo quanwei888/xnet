@@ -40,7 +40,7 @@ public class EchoAb {
 				servers.add(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 8401));
 
 				Connection conn = new Connection(servers, 0, 0, 0);
-				conn.connect();
+				conn.connect(); 
 
 				int i = 0;
 				while (i++ < requests) {

@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
  * 
  */
 public class IOBuffer {
-	ByteBuffer buf;
+	protected ByteBuffer buf;
 
 	public ByteBuffer getBuf() {
 		return buf;

@@ -318,15 +318,6 @@ public class IOBuffer {
 	}
 
 	/**
-	 * 读取byte[]，起始位置=position,长度=limit-position
-	 * 
-	 * @return
-	 */
-	public byte[] readBytes() {
-		return readBytes(buf.limit());
-	}
-
-	/**
 	 * 读取byte[]，起始位置=position
 	 * 
 	 * @param len
@@ -375,15 +366,6 @@ public class IOBuffer {
 	 */
 	public byte getByte() {
 		return getByte(buf.position());
-	}
-
-	/**
-	 * 读取byte[]，起始位置=position,长度=limit-position，但不改变position
-	 * 
-	 * @return
-	 */
-	public byte[] getBytes() {
-		return getBytes(buf.limit());
 	}
 
 	/**

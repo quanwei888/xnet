@@ -16,8 +16,8 @@ public class EchoServer {
 		PropertyConfigurator.configure("./conf/log4j.properties");
 		config.threadNum = Integer.parseInt(args[1]);
 		config.port = Short.parseShort(args[0]);
-		config.rTimeout = 10000;
-		config.wTimeout = 10000;
+		config.rTimeout = 3000;
+		config.wTimeout = 3000;
 		config.ip = "0.0.0.0";
 		config.keepalive = true;
 		config.maxConnection = 1000;

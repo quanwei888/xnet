@@ -8,43 +8,65 @@ import org.apache.commons.logging.LogFactory;
 
 public class EchoSession extends Session {
 	static Log logger = LogFactory.getLog(EchoSession.class);
-
 	static final int BUF_SIZE = 1024;
 
 	@Override
-	public void close() throws Exception {
+	public void complateRead(IOBuffer readBuf, IOBuffer writeBuf)
+			throws Exception {
 		logger.debug("DEBUG ENTER");
+		complateReadOnce(readBuf, writeBuf);
 	}
 
 	@Override
-	public int getInitReadBuf() {
-		return BUF_SIZE;
-	}
-
-	@Override
-	public void handle(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
-		//logger.info("DEBUG ENTER");
-		writeBuf.writeBytes(readBuf.readBytes());
-	}
-
-	@Override
-	public void open() throws Exception {
+	public void complateReadOnce(IOBuffer readBuf, IOBuffer writeBuf)
+			throws Exception {
 		logger.debug("DEBUG ENTER");
-	}
-
-	@Override
-	public int remain(IOBuffer readBuf) throws Exception {
 		if (readBuf.position() > 1) {
 			byte b = readBuf.getByte(readBuf.position() - 1);
 			if (b == (byte) '\n') {
-				return 0;
+				int len = readBuf.position();
+				writeBuf.position(0);
+				writeBuf.writeBytes(readBuf.readBytes(0, len));
+
+				writeBuf.position(0);
+				writeBuf.limit(len);
+				setNextState(STATE_WRITE);
+				return;
 			}
 		}
-		return BUF_SIZE;
+		remainToRead(BUF_SIZE);
 	}
 
 	@Override
-	public void timeout() throws Exception {
+	public void complateWrite(IOBuffer readBuf, IOBuffer writeBuf)
+			throws Exception {
+		logger.debug("DEBUG ENTER");
+		readBuf.position(0);
+		remainToRead(BUF_SIZE);
+	}
+
+	@Override
+	public void complateWriteOnce(IOBuffer readBuf, IOBuffer writeBuf)
+			throws Exception {
+		logger.debug("DEBUG ENTER");
+		setNextState(STATE_WRITE);
+	}
+
+	@Override
+	public void open(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
+		logger.debug("DEBUG ENTER");
+		remainToRead(BUF_SIZE);
+	}
+
+	@Override
+	public void timeout(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
+		logger.debug("DEBUG ENTER");
+		setNextState(STATE_CLOSE);
+	}
+
+	@Override
+	public void close() {
 		logger.debug("DEBUG ENTER");
 	}
+
 }

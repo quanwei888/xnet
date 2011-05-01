@@ -47,7 +47,7 @@ public class HttpSession extends Session {
 	@Override
 	public int remain(IOBuffer readBuf) throws Exception {
 		if (state == STATE_READ_HEAD) {
-			String buf = readBuf.getString("ASCII");
+			String buf = readBuf.getStringEx("ASCII");
 			int endPos = buf.indexOf("\r\n\r\n");
 			if (endPos == -1) {
 				// header不完整，继续接收
@@ -68,7 +68,7 @@ public class HttpSession extends Session {
 
 			// 解析body
 			state = STATE_READ_HEAD;
-			String body = readBuf.getString(bodyStartPos, bodyLen, "ASCII");
+			String body = readBuf.getStringEx(bodyStartPos, bodyLen, "ASCII");
 			parseBody(body);
 			return 0;
 		}

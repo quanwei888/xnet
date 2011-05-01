@@ -2,6 +2,7 @@ package xnet.core.util;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.InvalidMarkException;
 import java.nio.ReadOnlyBufferException;
 
@@ -16,6 +17,7 @@ public class IOBuffer {
 
 	/**
 	 * 获取原始ByteBuffer
+	 * 
 	 * @return
 	 */
 	public ByteBuffer getBuf() {
@@ -24,7 +26,9 @@ public class IOBuffer {
 
 	/**
 	 * 构造函数
-	 * @param initSize 初始化buffer大小
+	 * 
+	 * @param initSize
+	 *            初始化buffer大小
 	 */
 	public IOBuffer(int initSize) {
 		buf = ByteBuffer.allocate(initSize);
@@ -34,19 +38,49 @@ public class IOBuffer {
 		buf = ByteBuffer.allocate(0);
 	}
 
-	 /**
-     * Sets this buffer's limit.  If the position is larger than the new limit
-     * then it is set to the new limit.  If the mark is defined and larger than
-     * the new limit then it is reallocate and reset. </p>
-     *
-     * @param  newLimit
-     *         The new limit value; must be non-negative
-     *
-     * @return  This buffer
-     *
-     * @throws  IllegalArgumentException
-     *          If the preconditions on <tt>newLimit</tt> do not hold
-     */
+	/**
+	 * Retrieves this buffer's byte order.
+	 * 
+	 * <p>
+	 * The byte order is used when reading or writing multibyte values, and when
+	 * creating buffers that are views of this byte buffer. The order of a
+	 * newly-created byte buffer is always {@link ByteOrder#BIG_ENDIAN
+	 * BIG_ENDIAN}.
+	 * </p>
+	 * 
+	 * @return This buffer's byte order
+	 */
+	public final ByteOrder order() {
+		return buf.order();
+	}
+
+	/**
+	 * Modifies this buffer's byte order. </p>
+	 * 
+	 * @param bo
+	 *            The new byte order, either {@link ByteOrder#BIG_ENDIAN
+	 *            BIG_ENDIAN} or {@link ByteOrder#LITTLE_ENDIAN LITTLE_ENDIAN}
+	 * 
+	 * @return This buffer
+	 */
+	public final IOBuffer order(ByteOrder bo) {
+		buf.order(bo);
+		return this;
+	}
+
+	/**
+	 * Sets this buffer's limit. If the position is larger than the new limit
+	 * then it is set to the new limit. If the mark is defined and larger than
+	 * the new limit then it is reallocate and reset. </p>
+	 * 
+	 * @param newLimit
+	 *            The new limit value; must be non-negative
+	 * 
+	 * @return This buffer
+	 * 
+	 * @throws IllegalArgumentException
+	 *             If the preconditions on <tt>newLimit</tt> do not hold
+	 */
 	public IOBuffer limit(int limit) {
 		if (limit > buf.capacity()) {
 			ByteBuffer newBuf = ByteBuffer.allocate(limit);
@@ -266,7 +300,9 @@ public class IOBuffer {
 
 	/**
 	 * 读取一个byte
-	 * @param index 起始位置
+	 * 
+	 * @param index
+	 *            起始位置
 	 * @return
 	 */
 	public byte readByte(int index) {
@@ -276,6 +312,7 @@ public class IOBuffer {
 
 	/**
 	 * 读取一个byte，起始位置=position
+	 * 
 	 * @return
 	 */
 	public byte readByte() {
@@ -284,6 +321,7 @@ public class IOBuffer {
 
 	/**
 	 * 读取byte[]，起始位置=position,长度=limit-position
+	 * 
 	 * @return
 	 */
 	public byte[] readBytes() {
@@ -292,7 +330,9 @@ public class IOBuffer {
 
 	/**
 	 * 读取byte[]，起始位置=position
-	 * @param len 长度
+	 * 
+	 * @param len
+	 *            长度
 	 * @return
 	 */
 	public byte[] readBytes(int len) {
@@ -301,8 +341,11 @@ public class IOBuffer {
 
 	/**
 	 * 读取byte[]
-	 * @param index 起始位置
-	 * @param len 长度
+	 * 
+	 * @param index
+	 *            起始位置
+	 * @param len
+	 *            长度
 	 * @return
 	 */
 	public byte[] readBytes(int index, int len) {
@@ -314,7 +357,9 @@ public class IOBuffer {
 
 	/**
 	 * 读取一个byte，但不改变position
-	 * @param index 起始位置
+	 * 
+	 * @param index
+	 *            起始位置
 	 * @return
 	 */
 	public byte getByte(int index) {
@@ -327,6 +372,7 @@ public class IOBuffer {
 
 	/**
 	 * 读取一个byte，起始位置=position，但不改变position
+	 * 
 	 * @return
 	 */
 	public byte getByte() {
@@ -335,6 +381,7 @@ public class IOBuffer {
 
 	/**
 	 * 读取byte[]，起始位置=position,长度=limit-position，但不改变position
+	 * 
 	 * @return
 	 */
 	public byte[] getBytes() {
@@ -343,7 +390,9 @@ public class IOBuffer {
 
 	/**
 	 * 读取byte[]，起始位置=position，但不改变position
-	 * @param len 长度
+	 * 
+	 * @param len
+	 *            长度
 	 * @return
 	 */
 	public byte[] getBytes(int len) {
@@ -352,8 +401,11 @@ public class IOBuffer {
 
 	/**
 	 * 读取byte[]，但不改变position
-	 * @param index 起始位置
-	 * @param len 长度
+	 * 
+	 * @param index
+	 *            起始位置
+	 * @param len
+	 *            长度
 	 * @return
 	 */
 	public byte[] getBytes(int index, int len) {
@@ -367,7 +419,9 @@ public class IOBuffer {
 
 	/**
 	 * 写入byte[]，起始位置=position
-	 * @param bytes 数据
+	 * 
+	 * @param bytes
+	 *            数据
 	 * @return
 	 */
 	public IOBuffer writeBytes(byte[] bytes) {
@@ -376,8 +430,11 @@ public class IOBuffer {
 
 	/**
 	 * 写入byte[]
-	 * @param index 起始位置
-	 * @param bytes 数据
+	 * 
+	 * @param index
+	 *            起始位置
+	 * @param bytes
+	 *            数据
 	 * @return
 	 */
 	public IOBuffer writeBytes(int index, byte[] bytes) {
@@ -389,8 +446,11 @@ public class IOBuffer {
 
 	/**
 	 * 读取字符串，起始位置=position
-	 * @param len 长度
-	 * @param charset 编码
+	 * 
+	 * @param len
+	 *            长度
+	 * @param charset
+	 *            编码
 	 * @return
 	 */
 	public String readString(int len, String charset) {
@@ -399,9 +459,13 @@ public class IOBuffer {
 
 	/**
 	 * 读取字符串
-	 * @param index 起始位置
-	 * @param len 长度
-	 * @param charset 编码
+	 * 
+	 * @param index
+	 *            起始位置
+	 * @param len
+	 *            长度
+	 * @param charset
+	 *            编码
 	 * @return
 	 */
 	public String readString(int index, int len, String charset) {
@@ -416,7 +480,9 @@ public class IOBuffer {
 
 	/**
 	 * 读取字符串，起始位置=0,长度=position，但不改变position
-	 * @param charset 编码
+	 * 
+	 * @param charset
+	 *            编码
 	 * @return
 	 */
 	public String getString(String charset) {
@@ -425,8 +491,11 @@ public class IOBuffer {
 
 	/**
 	 * 读取字符串，起始位置=0，但不改变position
-	 * @param len 长度
-	 * @param charset 编码
+	 * 
+	 * @param len
+	 *            长度
+	 * @param charset
+	 *            编码
 	 * @return
 	 */
 	public String getString(int len, String charset) {
@@ -435,9 +504,13 @@ public class IOBuffer {
 
 	/**
 	 * 读取字符串，但不改变position
-	 * @param index 起始位置
-	 * @param len 长度
-	 * @param charset 编码
+	 * 
+	 * @param index
+	 *            起始位置
+	 * @param len
+	 *            长度
+	 * @param charset
+	 *            编码
 	 * @return
 	 */
 	public String getString(int index, int len, String charset) {
@@ -454,8 +527,11 @@ public class IOBuffer {
 
 	/**
 	 * 写入字符串，起始位置=position
-	 * @param str 字符串
-	 * @param charset 编码
+	 * 
+	 * @param str
+	 *            字符串
+	 * @param charset
+	 *            编码
 	 */
 	public void writeString(String str, String charset) {
 		byte[] bytes;

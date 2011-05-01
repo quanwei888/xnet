@@ -63,9 +63,8 @@ public class IOBuffer {
 	 * 
 	 * @return This buffer
 	 */
-	public final IOBuffer order(ByteOrder bo) {
+	public void order(ByteOrder bo) {
 		buf.order(bo);
-		return this;
 	}
 
 	/**
@@ -81,7 +80,7 @@ public class IOBuffer {
 	 * @throws IllegalArgumentException
 	 *             If the preconditions on <tt>newLimit</tt> do not hold
 	 */
-	public IOBuffer limit(int limit) {
+	public void limit(int limit) {
 		if (limit > buf.capacity()) {
 			ByteBuffer newBuf = ByteBuffer.allocate(limit);
 			System.arraycopy(buf.array(), 0, newBuf.array(), 0, buf.capacity());
@@ -89,7 +88,6 @@ public class IOBuffer {
 			buf = newBuf;
 		}
 		buf.limit(limit);
-		return this;
 	}
 
 	/**
@@ -418,14 +416,40 @@ public class IOBuffer {
 	}
 
 	/**
+	 * 写入byte，起始位置=position
+	 * 
+	 * @param b
+	 *            数据
+	 * @return
+	 */
+	public void writeByte(byte b) {
+		buf.position(buf.position());
+		buf.put(b);
+	}
+
+	/**
+	 * 写入byte
+	 * 
+	 * @param index
+	 *            起始位置
+	 * @param b
+	 *            数据
+	 * @return
+	 */
+	public void writeByte(int index, byte b) {
+		buf.position(index);
+		buf.put(b);
+	}
+
+	/**
 	 * 写入byte[]，起始位置=position
 	 * 
 	 * @param bytes
 	 *            数据
 	 * @return
 	 */
-	public IOBuffer writeBytes(byte[] bytes) {
-		return writeBytes(buf.position(), bytes);
+	public void writeBytes(byte[] bytes) {
+		writeBytes(buf.position(), bytes);
 	}
 
 	/**
@@ -437,11 +461,10 @@ public class IOBuffer {
 	 *            数据
 	 * @return
 	 */
-	public IOBuffer writeBytes(int index, byte[] bytes) {
+	public void writeBytes(int index, byte[] bytes) {
 		buf.position(index);
 		limit(index + bytes.length);
 		buf.put(bytes);
-		return this;
 	}
 
 	/**

@@ -15,7 +15,7 @@
 		<mkdir dir="${dest}" />
 	</target>
 	<target name="compile" depends="init">
-		<javac srcdir="${src}" destdir="${classes}"  debug="true" debuglevel="source,lines,vars">
+		<javac srcdir="${src}" destdir="${classes}" includeantruntime="on" debug="true" debuglevel="source,lines,vars">
 			<classpath refid="classpath" />
 			<compilerarg line="-encoding UTF-8 -Xlint:unchecked "/>
 		</javac>

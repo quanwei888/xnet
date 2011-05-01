@@ -19,64 +19,9 @@ public class HttpSession extends Session {
 	int bodyLen = 0;
 	int bodyStartPos = 0;
 
-	@Override
-	public void close() throws Exception {
-	}
-
-	@Override
-	public void open() throws Exception {
-	}
-
-	@Override
-	public void timeout() throws Exception {
-	}
-
-	@Override
-	public void handle(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
-		Servlet action = ServletFactory.get(request);
-		if (action == null) {
-			throw new Exception("action not found");
-		}
-		action.doRequest(request, response);
-		writeBuf.writeBytes(response.toBytes());
-		request.reset();
-		response.reset();
-		logger.info("finished a request");
-	}
-
-	@Override
-	public int remain(IOBuffer readBuf) throws Exception {
-		if (state == STATE_READ_HEAD) {
-			String buf = readBuf.getString("ASCII");
-			int endPos = buf.indexOf("\r\n\r\n");
-			if (endPos == -1) {
-				// header不完整，继续接收
-				return BUF_SIZE;
-			}
-
-			// 解析header
-			state = STATE_READ_BODY;
-			String header = buf.substring(0, endPos);
-			parseHeader(header);
-			bodyStartPos = endPos + 4;
-		}
-		if (state == STATE_READ_BODY) {
-			if (bodyStartPos + bodyLen > readBuf.position()) {
-				// body不完整，继续接收
-				return bodyStartPos + bodyLen - readBuf.position();
-			}
-
-			// 解析body
-			state = STATE_READ_HEAD;
-			String body = readBuf.getString(bodyStartPos, bodyLen, "ASCII");
-			parseBody(body);
-			return 0;
-		}
-
-		return BUF_SIZE;
-	}
-
 	void parseHeader(String header) throws Exception {
+		logger.debug("DEBUG ENTER");
+		
 		String[] lines = header.split("\r\n");
 		if (lines.length == 0) {
 			throw new Exception("invalid header");
@@ -107,13 +52,15 @@ public class HttpSession extends Session {
 			request.header.put(HttpAttr.HEAD_CONTENT_LEN, "0");
 		}
 
-		bodyLen = Integer.parseInt(request.header.get(HttpAttr.HEAD_CONTENT_LEN));
+		bodyLen = Integer.parseInt(request.header
+				.get(HttpAttr.HEAD_CONTENT_LEN));
 		if (bodyLen < 0) {
 			throw new Exception("invalid header");
 		}
 	}
 
 	void parseBody(String body) {
+		logger.debug("DEBUG ENTER");
 		// 解析参数
 		String paramStr = body;
 		String url = request.header.get(HttpAttr.HEAD_URL);
@@ -147,7 +94,100 @@ public class HttpSession extends Session {
 	}
 
 	@Override
-	public int getInitReadBuf() {
-		return BUF_SIZE;
+	public void complateRead(IOBuffer readBuf, IOBuffer writeBuf)
+			throws Exception {
+		logger.debug("DEBUG ENTER");
+		
+		complateReadOnce(readBuf, writeBuf);
 	}
+
+	@Override
+	public void complateReadOnce(IOBuffer readBuf, IOBuffer writeBuf)
+			throws Exception {
+		logger.debug("DEBUG ENTER");
+		
+		if (state == STATE_READ_HEAD) {
+			String buf = readBuf.getString("ASCII");
+			int endPos = buf.indexOf("\r\n\r\n");
+			if (endPos == -1) {
+				// header不完整，继续接收
+				remainToRead(BUF_SIZE);
+			}
+
+			// 解析header
+			state = STATE_READ_BODY;
+			String header = buf.substring(0, endPos);
+			parseHeader(header);
+			bodyStartPos = endPos + 4;
+		}
+		if (state == STATE_READ_BODY) {
+			if (bodyStartPos + bodyLen > readBuf.position()) {
+				// body不完整，继续接收
+				remainToRead(bodyStartPos + bodyLen - readBuf.position());
+				return;
+			}
+
+			// 解析body
+			state = STATE_READ_HEAD;
+			String body = readBuf.getString(bodyStartPos, bodyLen, "ASCII");
+			parseBody(body);
+
+			// 执行servlet
+			handle(readBuf, writeBuf);
+			setNextState(STATE_WRITE);
+			return;
+		}
+
+		remainToRead(BUF_SIZE);
+
+	}
+
+	public void handle(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
+		logger.debug("DEBUG ENTER");
+		// 执行servlet
+		Servlet action = ServletFactory.get(request);
+		if (action == null) {
+			throw new Exception("action not found");
+		}
+		action.doRequest(request, response);
+		writeBuf.position(0);
+		writeBuf.writeBytes(response.toBytes());
+		writeBuf.limit(writeBuf.position());
+		writeBuf.position(0);
+		request.reset();
+		response.reset();
+		logger.info("finished a request");
+	}
+
+	@Override
+	public void complateWrite(IOBuffer readBuf, IOBuffer writeBuf)
+			throws Exception {
+		logger.debug("DEBUG ENTER");
+		
+		setNextState(STATE_CLOSE);
+	}
+
+	@Override
+	public void complateWriteOnce(IOBuffer readBuf, IOBuffer writeBuf)
+			throws Exception {
+		logger.debug("DEBUG ENTER");
+	}
+
+	@Override
+	public void open(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
+		logger.debug("DEBUG ENTER");
+		remainToRead(BUF_SIZE);
+	}
+
+	@Override
+	public void timeout(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
+		logger.debug("DEBUG ENTER");
+		setNextState(STATE_CLOSE);
+	}
+
+	@Override
+	public void close() {
+		logger.debug("DEBUG ENTER");
+	}
+
 }

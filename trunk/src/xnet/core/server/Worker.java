@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import xnet.core.util.IOBuffer;
 import xnet.core.util.NetIo;
 
 /**
@@ -36,17 +37,18 @@ public class Worker implements Runnable {
 	/**
 	 * 超时的session集合， TreeSet保证集合中的session按超时时间升序排列
 	 */
-	Set<Session> timeoutSessionSet = new TreeSet<Session>(new Comparator<Session>() {
-		public int compare(Session a, Session b) {
-			if (a.nextTimeout - b.nextTimeout == 0) {
-				return 0;
-			} else if (a.nextTimeout - b.nextTimeout > 0) {
-				return 1;
-			} else {
-				return -1;
-			}
-		}
-	});
+	Set<Session> timeoutSessionSet = new TreeSet<Session>(
+			new Comparator<Session>() {
+				public int compare(Session a, Session b) {
+					if (a.nextTimeout - b.nextTimeout == 0) {
+						return 0;
+					} else if (a.nextTimeout - b.nextTimeout > 0) {
+						return 1;
+					} else {
+						return -1;
+					}
+				}
+			});
 	/**
 	 * 有IO事件或超时的session队列
 	 */
@@ -106,7 +108,8 @@ public class Worker implements Runnable {
 		long timeout = 0;
 		Iterator<Session> sessionIter = timeoutSessionSet.iterator();
 		if (sessionIter.hasNext()) {
-			timeout = sessionIter.next().nextTimeout - System.currentTimeMillis();
+			timeout = sessionIter.next().nextTimeout
+					- System.currentTimeMillis();
 			timeout = Math.max(timeout, 1);
 		}
 		logger.debug("time out:" + timeout);
@@ -159,22 +162,52 @@ public class Worker implements Runnable {
 		logger.debug("DEBUG ENTER");
 
 		try {
+			// 初始化buffer
 			session.readBuf.position(0);
 			session.readBuf.limit(0);
 			session.writeBuf.position(0);
 			session.writeBuf.limit(0);
-			session.state = Session.STATE_READ;
-			if (session.config.rTimeout > 0) {
-				session.nextTimeout = System.currentTimeMillis() + session.config.rTimeout;
-			}
-			session.open();
-			session.socket.register(selector, SelectionKey.OP_READ, session);
-			addTimeSession(session);
+
+			// 链接建立回调函数
+			session.open(session.readBuf, session.writeBuf);
+			// 更新session
+			updateSession(session);
 		} catch (Exception e) {
 			close(session);
 			e.printStackTrace();
 		}
 
+	}
+
+	/**
+	 * 当执行回调函数后更新session
+	 * 
+	 * @param session
+	 * @throws ClosedChannelException
+	 */
+	private void updateSession(Session session) throws ClosedChannelException {
+		// 根据session状态注册读或写事件
+		if (session.state == Session.STATE_READ) {
+			if (session.config.rTimeout > 0) {
+				session.nextTimeout = System.currentTimeMillis()
+						+ session.config.rTimeout;
+			}
+			session.socket.register(selector, SelectionKey.OP_READ, session);
+
+			// 加入到超时session队列
+			addTimeSession(session);
+		} else if (session.state == Session.STATE_WRITE) {
+			if (session.config.wTimeout > 0) {
+				session.nextTimeout = System.currentTimeMillis()
+						+ session.config.wTimeout;
+			}
+			session.socket.register(selector, SelectionKey.OP_WRITE, session);
+
+			// 加入到超时session队列
+			addTimeSession(session);
+		} else {
+			close(session);
+		}
 	}
 
 	/**
@@ -193,7 +226,8 @@ public class Worker implements Runnable {
 			keyIter.remove();
 
 			Session session = (Session) key.attachment();
-			session.event = session.state == Session.EVENT_READ ? Session.EVENT_READ : Session.EVENT_WRITE;
+			session.event = session.state == Session.EVENT_READ ? Session.EVENT_READ
+					: Session.EVENT_WRITE;
 
 			eventSessionList.add(session);
 			timeoutSessionSet.remove(session);
@@ -228,28 +262,10 @@ public class Worker implements Runnable {
 			try {
 				if (session.event == Session.EVENT_TIMEOUT) {
 					timeoutEvent(session);
-					close(session);
-				} else {
-					if (session.state == Session.STATE_READ) {
-						readEvent(session);
-					}
-					if (session.state == Session.STATE_WRITE) {
-						writeEvent(session);
-						if (session.writeBuf.remaining() == 0) {
-							if (session.config.keepalive) {
-								// 长连接
-								session.socket.register(selector, SelectionKey.OP_READ, session);
-								session.state = Session.STATE_READ;
-								if (session.config.rTimeout > 0) {
-									session.nextTimeout = System.currentTimeMillis() + session.config.rTimeout;
-								}
-								addTimeSession(session);
-							} else {
-								session.close();
-								close(session);
-							}
-						}
-					}
+				} else if (session.state == Session.STATE_READ) {
+					readEvent(session);
+				} else if (session.state == Session.STATE_WRITE) {
+					writeEvent(session);
 				}
 			} catch (Exception e) {
 				eventIter.remove();
@@ -268,9 +284,51 @@ public class Worker implements Runnable {
 		logger.debug("DEBUG ENTER");
 
 		try {
-			session.timeout();
+			session.timeout(session.readBuf, session.writeBuf);
+			updateSession(session);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	private void ioEvent(Session session, IOBuffer buf) throws Exception {
+		logger.debug("DEBUG ENTER");
+
+		while (buf.remaining() > 0) {
+			int len = 0;
+			int curState = session.state;
+			if (curState == Session.STATE_READ) {
+				len = NetIo.read(session.socket, buf);// 读数据
+			} else {
+				len = NetIo.write(session.socket, buf);// 读数据
+			}
+			int remain = buf.remaining();// 剩余字节数
+
+			if (curState == Session.STATE_READ) {
+				if (remain == 0) {
+					// 当前数据IO完成
+					session.complateRead(session.readBuf, session.writeBuf);
+				} else {
+					// 当前数据IO未完成
+					session.complateReadOnce(session.readBuf, session.writeBuf);
+				}
+			} else {
+				if (remain == 0) {
+					// 当前数据IO完成
+					session.complateWrite(session.readBuf, session.writeBuf);
+				} else {
+					// 当前数据IO未完成
+					session
+							.complateWriteOnce(session.readBuf,
+									session.writeBuf);
+				}
+			}
+
+			if (len == 0 || session.state != curState) {
+				// 不可IO或者session状态切换
+				updateSession(session);
+				break;
+			}
 		}
 	}
 
@@ -283,35 +341,7 @@ public class Worker implements Runnable {
 	public void readEvent(Session session) throws Exception {
 		logger.debug("DEBUG ENTER");
 
-		int len = 0;
-		int remain = session.getInitReadBuf();
-		do {
-			if (remain < 0) {
-				throw new Exception("invalid remain");
-			}
-			if (remain == 0) {
-				session.readBuf.limit(session.readBuf.position());
-				session.readBuf.position(0);
-				session.writeBuf.position(0);
-				session.writeBuf.limit(0);
-				session.handle(session.readBuf, session.writeBuf);
-				session.readBuf.position(0);
-				session.readBuf.limit(0);
-				session.state = Session.STATE_WRITE;
-				session.writeBuf.position(0);
-				session.socket.register(selector, SelectionKey.OP_WRITE, session);
-				if (session.config.wTimeout > 0) {
-					session.nextTimeout = System.currentTimeMillis() + session.config.wTimeout * 1000;
-				}
-				addTimeSession(session);
-				return;
-			}
-
-			// 读最多remain个字节
-			session.readBuf.limit(session.readBuf.position() + remain);
-			len = NetIo.read(session.socket, session.readBuf);
-			remain = session.remain(session.readBuf);
-		} while (len == remain || remain == 0);
+		ioEvent(session, session.readBuf);
 	}
 
 	/**
@@ -323,7 +353,7 @@ public class Worker implements Runnable {
 	public void writeEvent(Session session) throws Exception {
 		logger.debug("DEBUG ENTER");
 
-		NetIo.write(session.socket, session.writeBuf);
+		ioEvent(session, session.writeBuf);
 	}
 
 	/**
@@ -349,6 +379,8 @@ public class Worker implements Runnable {
 		}
 		timeoutSessionSet.remove(session);
 		SessionPool.closeSession(session);
+		// 执行close回调函数
+		session.close();
 	}
 
 }

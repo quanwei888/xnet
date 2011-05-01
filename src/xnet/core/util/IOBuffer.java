@@ -476,8 +476,8 @@ public class IOBuffer {
 	 *            编码
 	 * @return
 	 */
-	public String readString(int len, String charset) {
-		return readString(buf.position(), len, charset);
+	public String readStringEx(int len, String charset) {
+		return readStringEx(buf.position(), len, charset);
 	}
 
 	/**
@@ -491,7 +491,7 @@ public class IOBuffer {
 	 *            编码
 	 * @return
 	 */
-	public String readString(int index, int len, String charset) {
+	public String readStringEx(int index, int len, String charset) {
 		buf.position(index);
 		byte[] bytes = readBytes(len);
 		try {
@@ -508,8 +508,8 @@ public class IOBuffer {
 	 *            编码
 	 * @return
 	 */
-	public String getString(String charset) {
-		return getString(0, buf.position(), charset);
+	public String getStringEx(String charset) {
+		return getStringEx(0, buf.position(), charset);
 	}
 
 	/**
@@ -521,8 +521,8 @@ public class IOBuffer {
 	 *            编码
 	 * @return
 	 */
-	public String getString(int len, String charset) {
-		return getString(buf.position(), len, charset);
+	public String getStringEx(int len, String charset) {
+		return getStringEx(buf.position(), len, charset);
 	}
 
 	/**
@@ -536,7 +536,7 @@ public class IOBuffer {
 	 *            编码
 	 * @return
 	 */
-	public String getString(int index, int len, String charset) {
+	public String getStringEx(int index, int len, String charset) {
 		int pos = buf.position();
 		buf.position(index);
 		byte[] bytes = readBytes(len);
@@ -556,7 +556,7 @@ public class IOBuffer {
 	 * @param charset
 	 *            编码
 	 */
-	public void writeString(String str, String charset) {
+	public void writeStringEx(String str, String charset) {
 		byte[] bytes;
 		try {
 			bytes = str.getBytes(charset);

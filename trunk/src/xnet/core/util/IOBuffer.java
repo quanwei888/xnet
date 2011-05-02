@@ -4,7 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.InvalidMarkException;
-import java.nio.ReadOnlyBufferException;
+import java.nio.ReadOnlyBufferException; 
 
 /**
  * 用于非阻塞IO的buffer
@@ -547,5 +547,9 @@ public class IOBuffer {
 		}
 		limit(buf.position() + bytes.length);
 		buf.put(bytes);
+	}
+	
+	public String toString() {
+		return StringUtil.dumpAsHex(getBytes(0,limit()), limit());
 	}
 }

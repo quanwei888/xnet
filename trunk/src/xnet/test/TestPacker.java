@@ -9,11 +9,11 @@ public class TestPacker extends TestCase {
 		Packer packer = new Packer();
 		byte[] stream;
 		stream = new byte[] { (byte) 0xff, (byte) 0xff, };
-		Assert.assertEquals(getString(stream), getString(packer.packInt16(getNum(stream))));
+		Assert.assertEquals(getString(stream), getString(packer.packInt16((short) getNum(stream))));
 		stream = new byte[] { (byte) 0x0f, (byte) 0xff, };
-		Assert.assertEquals(getString(stream), getString(packer.packInt16(getNum(stream))));
+		Assert.assertEquals(getString(stream), getString(packer.packInt16((short) getNum(stream))));
 		stream = new byte[] { (byte) 0xff, (byte) 0x0f, };
-		Assert.assertEquals(getString(stream), getString(packer.packInt16(getNum(stream))));
+		Assert.assertEquals(getString(stream), getString(packer.packInt16((short) getNum(stream))));
 	}
 
 	public void testUnpackInt16() {
@@ -31,11 +31,11 @@ public class TestPacker extends TestCase {
 		Packer packer = new Packer();
 		byte[] stream;
 		stream = new byte[] { (byte) 0xff, (byte) 0xff, };
-		Assert.assertEquals(getString(stream), getString(packer.packUInt16(getNum(stream))));
+		Assert.assertEquals(getString(stream), getString(packer.packUInt16((int) getNum(stream))));
 		stream = new byte[] { (byte) 0x0f, (byte) 0xff, };
-		Assert.assertEquals(getString(stream), getString(packer.packUInt16(getNum(stream))));
+		Assert.assertEquals(getString(stream), getString(packer.packUInt16((int) getNum(stream))));
 		stream = new byte[] { (byte) 0xff, (byte) 0x0f, };
-		Assert.assertEquals(getString(stream), getString(packer.packUInt16(getNum(stream))));
+		Assert.assertEquals(getString(stream), getString(packer.packUInt16((int) getNum(stream))));
 	}
 
 	public void testUnpackUInt16() {
@@ -53,11 +53,11 @@ public class TestPacker extends TestCase {
 		Packer packer = new Packer();
 		byte[] stream;
 		stream = new byte[] { (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, };
-		Assert.assertEquals(getString(stream), getString(packer.packInt32(getNum(stream))));
+		Assert.assertEquals(getString(stream), getString(packer.packInt32((int) getNum(stream))));
 		stream = new byte[] { (byte) 0x0f, (byte) 0xff, (byte) 0xff, (byte) 0xff, };
-		Assert.assertEquals(getString(stream), getString(packer.packInt32(getNum(stream))));
+		Assert.assertEquals(getString(stream), getString(packer.packInt32((int) getNum(stream))));
 		stream = new byte[] { (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0x0f, };
-		Assert.assertEquals(getString(stream), getString(packer.packInt32(getNum(stream))));
+		Assert.assertEquals(getString(stream), getString(packer.packInt32((int) getNum(stream))));
 	}
 
 	public void testUnpackInt32() {

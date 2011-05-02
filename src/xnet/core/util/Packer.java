@@ -15,15 +15,15 @@ public class Packer {
 		this.bigEndian = bigEndian;
 	}
 
-	public byte[] packInt16(long num) {
+	public byte[] packInt16(short num) {
 		return pack(num, 2);
 	}
 
-	public byte[] packUInt16(long num) {
+	public byte[] packUInt16(int num) {
 		return pack(num, 2);
 	}
 
-	public byte[] packInt32(long num) {
+	public byte[] packInt32(int num) {
 		return pack(num, 4);
 	}
 
@@ -60,16 +60,16 @@ public class Packer {
 
 	}
 
-	public long unpackInt16(byte[] stream) {
-		return unpack(stream, 2);
+	public short unpackInt16(byte[] stream) {
+		return (short) unpack(stream, 2);
 	}
 
-	public long unpackUInt16(byte[] stream) {
-		return unpack(stream, 2);
+	public int unpackUInt16(byte[] stream) {
+		return (int) unpack(stream, 2);
 	}
 
-	public long unpackInt32(byte[] stream) {
-		return unpack(stream, 4);
+	public int unpackInt32(byte[] stream) {
+		return (int) unpack(stream, 4);
 	}
 
 	public long unpackUInt32(byte[] stream) {

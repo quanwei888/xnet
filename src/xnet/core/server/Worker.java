@@ -30,6 +30,7 @@ public class Worker implements Runnable {
 
 	Selector selector;
 	Boolean lock = false;
+	
 	/**
 	 * 新进来的session队列
 	 */

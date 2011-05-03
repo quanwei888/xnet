@@ -49,7 +49,6 @@ public class Server {
 			pool.execute(workers[i]);
 		}
 
-		logger.debug("DEBUG ENTER");
 		for (int i = 0; i < config.maxConnection; i++) {
 			Session session = (Session) config.session.newInstance();
 			session.config = config;
@@ -60,16 +59,19 @@ public class Server {
 			SessionPool.addSession(session);
 		}
 
-		logger.debug("DEBUG ENTER");
-		initServerSocket();
-		SocketChannel csocket = null;
+		try {
+			initServerSocket();
+		} catch (Exception e) {
+			pool.shutdownNow();
+			e.printStackTrace();
+			return ;
+		}
 
-		logger.debug("DEBUG ENTER");
+		SocketChannel csocket = null;
 		while (true) {
 			selector.select();
 			try {
 				csocket = socket.accept();
-				logger.debug("DEBUG ENTER");
 				csocket.configureBlocking(false);
 				Session session = SessionPool.openSession();
 				if (session == null) {

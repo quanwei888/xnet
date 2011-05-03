@@ -72,8 +72,7 @@ public abstract class Session {
 	 *            响应包
 	 * @throws Exception
 	 */
-	public abstract void open(IOBuffer readBuf, IOBuffer writeBuf)
-			throws Exception;
+	public abstract void open(IOBuffer readBuf, IOBuffer writeBuf) throws Exception;
 
 	/**
 	 * 所有数据读取完成
@@ -84,11 +83,10 @@ public abstract class Session {
 	 *            响应包
 	 * @throws Exception
 	 */
-	public abstract void complateRead(IOBuffer readBuf, IOBuffer writeBuf)
-			throws Exception;
+	public abstract void complateRead(IOBuffer readBuf, IOBuffer writeBuf) throws Exception;
 
 	/**
-	 * 本次数据读取完成
+	 * 本次数据读取完成,默认不作处理
 	 * 
 	 * @param readBuf
 	 *            请求包
@@ -96,8 +94,9 @@ public abstract class Session {
 	 *            响应包
 	 * @throws Exception
 	 */
-	public abstract void complateReadOnce(IOBuffer readBuf, IOBuffer writeBuf)
-			throws Exception;
+	public void complateReadOnce(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
+		logger.debug("DEBUG ENTER");
+	}
 
 	/**
 	 * 所有数据写入完成
@@ -108,11 +107,10 @@ public abstract class Session {
 	 *            响应包
 	 * @throws Exception
 	 */
-	public abstract void complateWrite(IOBuffer readBuf, IOBuffer writeBuf)
-			throws Exception;
+	public abstract void complateWrite(IOBuffer readBuf, IOBuffer writeBuf) throws Exception;
 
 	/**
-	 * 本次数据写入完成
+	 * 本次数据写入完成,默认不作处理
 	 * 
 	 * @param readBuf
 	 *            请求包
@@ -120,11 +118,12 @@ public abstract class Session {
 	 *            响应包
 	 * @throws Exception
 	 */
-	public abstract void complateWriteOnce(IOBuffer readBuf, IOBuffer writeBuf)
-			throws Exception;
+	public void complateWriteOnce(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
+		logger.debug("DEBUG ENTER");
+	}
 
 	/**
-	 * 连接关闭回调函数
+	 * 连接关闭后的回调函数,默认不作处理
 	 * 
 	 * @param in
 	 *            请求包
@@ -132,18 +131,27 @@ public abstract class Session {
 	 *            响应包
 	 * @throws Exception
 	 */
-	public abstract void close();
+	public void close() {
+		logger.debug("DEBUG ENTER");
+	}
 
 	/**
-	 * 超时处理
+	 * 超时处理，默认关闭链接
 	 * 
 	 * @throws Exception
 	 */
-	public abstract void timeout(IOBuffer readBuf, IOBuffer writeBuf)
-			throws Exception;
+	public void timeout(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
+		logger.warn("time out,state=" + state);
+		setNextState(STATE_CLOSE);
+	}
 
+	/**
+	 * 设置状态
+	 * @param state
+	 */
 	public void setNextState(int state) {
 		this.state = state;
+		
 		if (state == STATE_WRITE) {
 			readBuf.position(0);
 			readBuf.limit(0);
@@ -153,11 +161,19 @@ public abstract class Session {
 		}
 	}
 
+	/**
+	 * 还需读多少字节
+	 * @param remain
+	 */
 	public void remainToRead(int remain) {
 		readBuf.limit(readBuf.position() + remain);
 		setNextState(STATE_READ);
 	}
 
+	/**
+	 * 还需写多少字节
+	 * @param remain
+	 */
 	public void remainToWrite(int remain) {
 		writeBuf.limit(writeBuf.position() + remain);
 		setNextState(STATE_WRITE);

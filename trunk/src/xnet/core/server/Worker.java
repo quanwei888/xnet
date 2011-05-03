@@ -37,18 +37,17 @@ public class Worker implements Runnable {
 	/**
 	 * 超时的session集合， TreeSet保证集合中的session按超时时间升序排列
 	 */
-	Set<Session> timeoutSessionSet = new TreeSet<Session>(
-			new Comparator<Session>() {
-				public int compare(Session a, Session b) {
-					if (a.nextTimeout - b.nextTimeout == 0) {
-						return 0;
-					} else if (a.nextTimeout - b.nextTimeout > 0) {
-						return 1;
-					} else {
-						return -1;
-					}
-				}
-			});
+	Set<Session> timeoutSessionSet = new TreeSet<Session>(new Comparator<Session>() {
+		public int compare(Session a, Session b) {
+			if (a.nextTimeout - b.nextTimeout == 0) {
+				return 0;
+			} else if (a.nextTimeout - b.nextTimeout > 0) {
+				return 1;
+			} else {
+				return -1;
+			}
+		}
+	});
 	/**
 	 * 有IO事件或超时的session队列
 	 */
@@ -108,8 +107,7 @@ public class Worker implements Runnable {
 		long timeout = 0;
 		Iterator<Session> sessionIter = timeoutSessionSet.iterator();
 		if (sessionIter.hasNext()) {
-			timeout = sessionIter.next().nextTimeout
-					- System.currentTimeMillis();
+			timeout = sessionIter.next().nextTimeout - System.currentTimeMillis();
 			timeout = Math.max(timeout, 1);
 		}
 		logger.debug("time out:" + timeout);
@@ -187,19 +185,17 @@ public class Worker implements Runnable {
 	 */
 	private void updateSession(Session session) throws ClosedChannelException {
 		// 根据session状态注册读或写事件
-		if (session.state == Session.STATE_READ) {
+		if (session.state == Session.STATE_READ && session.readBuf.remaining() > 0) {
 			if (session.config.rTimeout > 0) {
-				session.nextTimeout = System.currentTimeMillis()
-						+ session.config.rTimeout;
+				session.nextTimeout = System.currentTimeMillis() + session.config.rTimeout;
 			}
 			session.socket.register(selector, SelectionKey.OP_READ, session);
 
 			// 加入到超时session队列
 			addTimeSession(session);
-		} else if (session.state == Session.STATE_WRITE) {
+		} else if (session.state == Session.STATE_WRITE && session.writeBuf.remaining() > 0) {
 			if (session.config.wTimeout > 0) {
-				session.nextTimeout = System.currentTimeMillis()
-						+ session.config.wTimeout;
+				session.nextTimeout = System.currentTimeMillis() + session.config.wTimeout;
 			}
 			session.socket.register(selector, SelectionKey.OP_WRITE, session);
 
@@ -226,8 +222,7 @@ public class Worker implements Runnable {
 			keyIter.remove();
 
 			Session session = (Session) key.attachment();
-			session.event = session.state == Session.EVENT_READ ? Session.EVENT_READ
-					: Session.EVENT_WRITE;
+			session.event = session.state == Session.EVENT_READ ? Session.EVENT_READ : Session.EVENT_WRITE;
 
 			eventSessionList.add(session);
 			timeoutSessionSet.remove(session);
@@ -318,9 +313,7 @@ public class Worker implements Runnable {
 					session.complateWrite(session.readBuf, session.writeBuf);
 				} else {
 					// 当前数据IO未完成
-					session
-							.complateWriteOnce(session.readBuf,
-									session.writeBuf);
+					session.complateWriteOnce(session.readBuf, session.writeBuf);
 				}
 			}
 

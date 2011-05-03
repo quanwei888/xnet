@@ -46,13 +46,6 @@ public class EchoSession extends Session {
 	}
 
 	@Override
-	public void complateWriteOnce(IOBuffer readBuf, IOBuffer writeBuf)
-			throws Exception {
-		logger.debug("DEBUG ENTER");
-		setNextState(STATE_WRITE);
-	}
-
-	@Override
 	public void open(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
 		logger.debug("DEBUG ENTER");
 		remainToRead(BUF_SIZE);

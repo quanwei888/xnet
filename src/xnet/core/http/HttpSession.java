@@ -166,12 +166,7 @@ public class HttpSession extends Session {
 		
 		setNextState(STATE_CLOSE);
 	}
-
-	@Override
-	public void complateWriteOnce(IOBuffer readBuf, IOBuffer writeBuf)
-			throws Exception {
-		logger.debug("DEBUG ENTER");
-	}
+ 
 
 	@Override
 	public void open(IOBuffer readBuf, IOBuffer writeBuf) throws Exception {
@@ -184,10 +179,4 @@ public class HttpSession extends Session {
 		logger.debug("DEBUG ENTER");
 		setNextState(STATE_CLOSE);
 	}
-
-	@Override
-	public void close() {
-		logger.debug("DEBUG ENTER");
-	}
-
 }

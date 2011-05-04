@@ -43,12 +43,6 @@ public class Server {
 	public void run() throws Exception {
 		logger.debug("DEBUG ENTER");
 
-		ExecutorService pool = Executors.newFixedThreadPool(config.threadNum);
-		for (int i = 0; i < workers.length; i++) {
-			workers[i] = new Worker();
-			pool.execute(workers[i]);
-		}
-
 		for (int i = 0; i < config.maxConnection; i++) {
 			Session session = (Session) config.session.newInstance();
 			session.config = config;
@@ -62,13 +56,15 @@ public class Server {
 		try {
 			initServerSocket();
 		} catch (Exception e) {
-			for (int i = 0; i < workers.length; i++) {
-				workers[i] = new Worker();
-				workers[i].isRun = false;
-			}
-			pool.shutdownNow();
 			e.printStackTrace();
 			return ;
+		}
+		
+
+		ExecutorService pool = Executors.newFixedThreadPool(config.threadNum);
+		for (int i = 0; i < workers.length; i++) {
+			workers[i] = new Worker();
+			pool.execute(workers[i]);
 		}
 
 		SocketChannel csocket = null;

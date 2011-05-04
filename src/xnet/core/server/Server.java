@@ -62,6 +62,10 @@ public class Server {
 		try {
 			initServerSocket();
 		} catch (Exception e) {
+			for (int i = 0; i < workers.length; i++) {
+				workers[i] = new Worker();
+				workers[i].isRun = false;
+			}
 			pool.shutdownNow();
 			e.printStackTrace();
 			return ;

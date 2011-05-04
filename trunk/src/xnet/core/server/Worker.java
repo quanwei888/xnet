@@ -30,7 +30,6 @@ public class Worker implements Runnable {
 
 	Selector selector;
 	Boolean lock = false;
-	boolean isRun = true;
 	
 	/**
 	 * 新进来的session队列
@@ -94,10 +93,6 @@ public class Worker implements Runnable {
 		logger.debug("DEBUG ENTER");
 
 		while (true) {
-			if (!isRun) {
-				logger.info("worker exit");
-				break ;
-			}
 			select();
 		}
 	}
